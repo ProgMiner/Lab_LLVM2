@@ -460,6 +460,7 @@ set(LLVM_ALL_TARGETS
   MSP430
   NVPTX
   PowerPC
+  ProgMinerLab
   RISCV
   Sparc
   SystemZ
