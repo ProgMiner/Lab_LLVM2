@@ -31,16 +31,14 @@ ProgMinerLabRegisterInfo::ProgMinerLabRegisterInfo()
     {}
 
 const MCPhysReg * ProgMinerLabRegisterInfo::getCalleeSavedRegs(const MachineFunction * MF) const {
-    llvm_unreachable("getCalleeSavedRegs"); // TODO
-    // return CSR_ProgMinerLab_SaveList;
+    return CSR_ProgMinerLab_SaveList;
 }
 
 const uint32_t * ProgMinerLabRegisterInfo::getCallPreservedMask(
     const MachineFunction & MF,
     CallingConv::ID CC
 ) const {
-    llvm_unreachable("getCallPreservedMask"); // TODO
-    // return CSR_ProgMinerLab_RegMask;
+    return CSR_ProgMinerLab_RegMask;
 }
 
 // TODO: check cconv
@@ -58,8 +56,7 @@ BitVector ProgMinerLabRegisterInfo::getReservedRegs(const MachineFunction & MF) 
 }
 
 bool ProgMinerLabRegisterInfo::requiresRegisterScavenging(const MachineFunction & MF) const {
-    llvm_unreachable("requiresRegisterScavenging"); // TODO: what for?
-    return false;
+    return false; // TODO: what for?
 }
 
 // TODO: rewrite!
@@ -102,17 +99,3 @@ Register ProgMinerLabRegisterInfo::getFrameRegister(const MachineFunction & MF) 
 
     return TFI->hasFP(MF) ? ProgMinerLab::FP : ProgMinerLab::SP;
 }
-
-#if 0
-// TODO
-bool ProgMinerLabRegisterInfo::needsFrameMoves(const MachineFunction & MF) {
-    return MF.needsFrameMoves();
-}
-#endif
-
-#if 0
-// TODO
-bool ProgMinerLabRegisterInfo::useFPForScavengingIndex(const MachineFunction & MF) const {
-    llvm_unreachable("");
-}
-#endif

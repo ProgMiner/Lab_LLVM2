@@ -11,6 +11,7 @@
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/IR/Function.h"
 
+#include "MCTargetDesc/ProgMinerLabMCTargetDesc.h"
 // #include "ProgMinerLabMachineFunctionInfo.h"
 #include "ProgMinerLabSubtarget.h"
 
@@ -21,23 +22,18 @@
 using namespace llvm;
 
 
-// seems done
 void ProgMinerLabFrameLowering::determineCalleeSaves(
     MachineFunction & MF,
     BitVector & SavedRegs,
     RegScavenger * RS
 ) const {
-    llvm_unreachable("determineCalleeSaves"); // TODO
-
-/*
     TargetFrameLowering::determineCalleeSaves(MF, SavedRegs, RS);
 
-    // unconditionally spill RA and FP only if the function uses a frame pointer
+    // unconditionally spill FP if the function uses a frame pointer
     if (hasFP(MF)) {
-      SavedRegs.set(ProgMinerLab::R0);
-      SavedRegs.set(ProgMinerLab::R2);
+        // SavedRegs.set(ProgMinerLab::R0);
+        SavedRegs.set(ProgMinerLab::FP);
     }
-*/
 }
 
 void ProgMinerLabFrameLowering::adjustStackToMatchRecords(

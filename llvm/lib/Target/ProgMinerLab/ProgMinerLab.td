@@ -1,6 +1,7 @@
 include "llvm/Target/Target.td"
 
 include "ProgMinerLabRegisterInfo.td"
+include "ProgMinerLabCallingConv.td"
 include "ProgMinerLabInstrInfo.td"
 
 
