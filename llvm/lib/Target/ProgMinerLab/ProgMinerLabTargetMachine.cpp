@@ -14,6 +14,7 @@
 #include "llvm/TargetParser/Triple.h"
 
 #include "TargetInfo/ProgMinerLabTargetInfo.h"
+#include "ProgMinerLabISelDagToDag.h"
 
 
 using namespace llvm;
@@ -86,8 +87,6 @@ TargetPassConfig * ProgMinerLabTargetMachine::createPassConfig(PassManagerBase &
 }
 
 bool ProgMinerLabPassConfig::addInstSelector() {
-    llvm_unreachable("addInstSelector"); // TODO
-
-    // addPass(createProgMinerLabISelDag(getProgMinerLabTargetMachine()));
+    addPass(createProgMinerLabISelDag(getProgMinerLabTargetMachine()));
     return false;
 }

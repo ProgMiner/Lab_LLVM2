@@ -7,6 +7,7 @@ tablegen(LLVM ProgMinerLabGenRegisterInfo.inc -gen-register-info)
 tablegen(LLVM ProgMinerLabGenSubtargetInfo.inc -gen-subtarget)
 tablegen(LLVM ProgMinerLabGenInstrInfo.inc -gen-instr-info)
 tablegen(LLVM ProgMinerLabGenAsmWriter.inc -gen-asm-writer)
+tablegen(LLVM ProgMinerLabGenDAGISel.inc -gen-dag-isel)
 
 add_public_tablegen_target(ProgMinerLabCommonTableGen)
 
@@ -14,6 +15,7 @@ add_llvm_target(ProgMinerLabCodeGen
     ProgMinerLabTargetMachine.cpp
     ProgMinerLabFrameLowering.cpp
     ProgMinerLabRegisterInfo.cpp
+    ProgMinerLabISelDagToDag.cpp
     ProgMinerLabInstrInfo.cpp
     ProgMinerLabSubtarget.cpp
 
