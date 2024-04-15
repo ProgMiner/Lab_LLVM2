@@ -14,5 +14,5 @@ using namespace llvm;
 
 
 ProgMinerLabRegisterInfo::ProgMinerLabRegisterInfo()
-    : ProgMinerLabGenRegisterInfo(ProgMinerLab::I1)
+    : ProgMinerLabGenRegisterInfo(ProgMinerLab::R0)
     {}

@@ -1,30 +1,18 @@
 
 // ProgMinerLab register file declaration
-class ProgMinerLabReg<bits<16> Enc, string n> : Register<n> {
+class ProgMinerLabReg<bits<4> Enc, string name> : Register<name> {
 
     let Namespace = "ProgMinerLab";
 
-    let HWEncoding = Enc;
+    let HWEncoding{3-0} = Enc;
 }
 
-// Integer registers
-foreach i = 1-8 in {
+// Registers
+foreach i = 0-15 in {
 
-    def I#i : ProgMinerLabReg<!sub(i, 1), "i"#i>;
-}
-
-// Memory registers
-foreach i = 1-8 in {
-
-    def M#i : ProgMinerLabReg<!sub(i, 1), "m"#i>;
+    def R#i : ProgMinerLabReg<i, "r"#i>, DwarfRegNum<[i]>;
 }
 
 // Classes
-
-// Integer GPRs
-def IGPR : RegisterClass<"ProgMinerLab", [i32], 32,
-    (add I1, I2, I3, I4, I5, I6, I7, I8)>;
-
-// Memory GPRs
-def MGPR : RegisterClass<"ProgMinerLab", [i32], 32,
-    (add M1, M2, M3, M4, M5, M6, M7, M8)>;
+def GPR : RegisterClass<"ProgMinerLab", [i32], 32,
+    (add R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15)>;
