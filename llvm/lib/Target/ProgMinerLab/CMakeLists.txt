@@ -12,13 +12,17 @@ add_public_tablegen_target(ProgMinerLabCommonTableGen)
 
 add_llvm_target(ProgMinerLabCodeGen
     ProgMinerLabTargetMachine.cpp
+    ProgMinerLabFrameLowering.cpp
     ProgMinerLabRegisterInfo.cpp
     ProgMinerLabInstrInfo.cpp
     ProgMinerLabSubtarget.cpp
 
     LINK_COMPONENTS
+    AsmPrinter
     CodeGen
     Core
+    MC
+    SelectionDAG
     Support
     Target
     ProgMinerLabInfo

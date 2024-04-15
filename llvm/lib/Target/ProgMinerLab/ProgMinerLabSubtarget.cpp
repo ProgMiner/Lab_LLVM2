@@ -13,9 +13,12 @@ using namespace llvm;
 #include "ProgMinerLabGenSubtargetInfo.inc"
 
 
+void ProgMinerLabSubtarget::anchor() {}
+
 ProgMinerLabSubtarget::ProgMinerLabSubtarget(
+    const Triple & TT,
     const StringRef & CPU,
-    const StringRef & TuneCPU,
     const StringRef & FS,
     const TargetMachine & TM
-): ProgMinerLabGenSubtargetInfo(TM.getTargetTriple(), CPU, TuneCPU, FS) {}
+): ProgMinerLabGenSubtargetInfo(TT, CPU, /* TuneCPU = */ CPU, FS), InstrInfo(),
+    FrameLowering(*this) /*, TLInfo(TM, *this) TODO */ {}

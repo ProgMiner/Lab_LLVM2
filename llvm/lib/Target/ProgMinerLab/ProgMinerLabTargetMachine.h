@@ -1,17 +1,17 @@
 #pragma once
 
-#include <optional>
-
 #include "llvm/Target/TargetMachine.h"
+
+#include "ProgMinerLabInstrInfo.h"
+#include "ProgMinerLabSubtarget.h"
 
 
 namespace llvm {
 
-extern Target TheProgMinerLabTarget;
-
 class ProgMinerLabTargetMachine : public LLVMTargetMachine {
 
     std::unique_ptr<TargetLoweringObjectFile> TLOF;
+    ProgMinerLabSubtarget Subtarget;
 
 public:
 
@@ -28,6 +28,13 @@ public:
         bool isLittle = true
     );
 
+     ~ProgMinerLabTargetMachine() override;
+
+    const ProgMinerLabSubtarget * getSubtargetImpl(const Function &) const override {
+      return &Subtarget;
+    }
+
+    // pass pipeline configuration
     TargetPassConfig * createPassConfig(PassManagerBase & PM) override;
 
     TargetLoweringObjectFile * getObjFileLowering() const override {
