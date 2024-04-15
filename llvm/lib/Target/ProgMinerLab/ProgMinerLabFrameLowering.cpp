@@ -2,11 +2,13 @@
 
 #include <algorithm>
 
+#include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
-#include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
+#include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/RegisterScavenging.h"
 #include "llvm/CodeGen/TargetRegisterInfo.h"
+#include "llvm/Target/TargetMachine.h"
 #include "llvm/IR/Function.h"
 
 // #include "ProgMinerLabMachineFunctionInfo.h"
@@ -116,16 +118,12 @@ bool ProgMinerLabFrameLowering::restoreCalleeSavedRegisters(
 }
 
 bool ProgMinerLabFrameLowering::hasFP(const MachineFunction & MF) const {
-    llvm_unreachable("hasFP"); // TODO
-
-/*
     const TargetRegisterInfo * const RegInfo = MF.getSubtarget().getRegisterInfo();
 
     const MachineFrameInfo & MFI = MF.getFrameInfo();
     return MF.getTarget().Options.DisableFramePointerElim(MF) // -fomit-frame-pointer
         || RegInfo->hasStackRealignment(MF) || MFI.hasVarSizedObjects()
         || MFI.isFrameAddressTaken();
-*/
 }
 
 StackOffset ProgMinerLabFrameLowering::getFrameIndexReference(

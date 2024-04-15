@@ -17,6 +17,7 @@ add_llvm_target(ProgMinerLabCodeGen
     ProgMinerLabFrameLowering.cpp
     ProgMinerLabRegisterInfo.cpp
     ProgMinerLabISelDagToDag.cpp
+    ProgMinerLabISelLowering.cpp
     ProgMinerLabAsmPrinter.cpp
     ProgMinerLabInstrInfo.cpp
     ProgMinerLabSubtarget.cpp

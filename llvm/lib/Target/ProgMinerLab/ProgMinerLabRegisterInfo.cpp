@@ -45,20 +45,16 @@ const uint32_t * ProgMinerLabRegisterInfo::getCallPreservedMask(
 
 // TODO: check cconv
 BitVector ProgMinerLabRegisterInfo::getReservedRegs(const MachineFunction & MF) const {
-    llvm_unreachable("getReservedRegs"); // TODO
-
-/*
     ProgMinerLabFrameLowering const * TFI = getFrameLowering(MF);
 
     BitVector Reserved(getNumRegs());
-    Reserved.set(ProgMinerLab::R1); // R1 is stack pointer
+    Reserved.set(ProgMinerLab::SP);
 
     if (TFI->hasFP(MF)) {
-        Reserved.set(ProgMinerLab::R2); // R2 is frame pointer
+        Reserved.set(ProgMinerLab::FP);
     }
 
     return Reserved;
-*/
 }
 
 bool ProgMinerLabRegisterInfo::requiresRegisterScavenging(const MachineFunction & MF) const {
@@ -102,14 +98,9 @@ bool ProgMinerLabRegisterInfo::eliminateFrameIndex(
 }
 
 Register ProgMinerLabRegisterInfo::getFrameRegister(const MachineFunction & MF) const {
-    llvm_unreachable("getFrameRegister"); // TODO
-
-/*
     const TargetFrameLowering * TFI = getFrameLowering(MF);
 
-    // R2 is frame pointer, R1 is stack pointer
-    return TFI->hasFP(MF) ? ProgMinerLab::R2 : ProgMinerLab::R1;
-*/
+    return TFI->hasFP(MF) ? ProgMinerLab::FP : ProgMinerLab::SP;
 }
 
 #if 0

@@ -54,10 +54,9 @@ static MCAsmInfo * createProgMinerLabMCAsmInfo(
 ) {
     MCAsmInfo * const MAI = new ProgMinerLabELFMCAsmInfo(TT);
 
-    // stack pointer is R1
-    const unsigned SP = MRI.getDwarfRegNum(ProgMinerLab::R1, true);
-
+    const unsigned SP = MRI.getDwarfRegNum(ProgMinerLab::SP, true);
     MAI->addInitialFrameState(MCCFIInstruction::cfiDefCfa(nullptr, SP, 0));
+
     return MAI;
 }
 

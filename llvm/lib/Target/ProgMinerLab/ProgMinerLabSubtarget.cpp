@@ -21,4 +21,4 @@ ProgMinerLabSubtarget::ProgMinerLabSubtarget(
     const StringRef & FS,
     const TargetMachine & TM
 ): ProgMinerLabGenSubtargetInfo(TT, CPU, /* TuneCPU = */ CPU, FS), InstrInfo(),
-    FrameLowering(*this) /*, TLInfo(TM, *this) TODO */ {}
+    FrameLowering(*this), TLInfo(TM, *this) {}

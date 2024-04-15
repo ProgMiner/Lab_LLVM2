@@ -4,7 +4,7 @@
 #include "llvm/CodeGen/SelectionDAGTargetInfo.h"
 
 #include "ProgMinerLabFrameLowering.h"
-// #include "ProgMinerLabISelLowering.h"
+#include "ProgMinerLabISelLowering.h"
 #include "ProgMinerLabInstrInfo.h"
 
 
@@ -21,7 +21,7 @@ class ProgMinerLabSubtarget : public ProgMinerLabGenSubtargetInfo {
     ProgMinerLabRegisterInfo RegInfo;
     ProgMinerLabInstrInfo InstrInfo;
     ProgMinerLabFrameLowering FrameLowering;
-    // ProgMinerLabTargetLowering TLInfo;
+    ProgMinerLabTargetLowering TLInfo;
     SelectionDAGTargetInfo TSInfo;
 
 public:
@@ -48,10 +48,8 @@ public:
         return &FrameLowering;
     }
 
-    // const ProgMinerLabTargetLowering * getTargetLowering() const override {
-    const TargetLowering * getTargetLowering() const override {
-        llvm_unreachable("getTargetLowering"); // TODO
-        // return &TLInfo;
+    const ProgMinerLabTargetLowering * getTargetLowering() const override {
+        return &TLInfo;
     }
 
     const SelectionDAGTargetInfo * getSelectionDAGInfo() const override {

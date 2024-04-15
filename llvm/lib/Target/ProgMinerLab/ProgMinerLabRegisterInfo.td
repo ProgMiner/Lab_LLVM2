@@ -7,12 +7,20 @@ class ProgMinerLabReg<bits<4> Enc, string name> : Register<name> {
     let HWEncoding{3-0} = Enc;
 }
 
-// Registers
-foreach i = 0-15 in {
+// GPRs
+foreach i = 0-13 in {
 
     def R#i : ProgMinerLabReg<i, "r"#i>, DwarfRegNum<[i]>;
 }
 
+// stack pointer
+let AltNames = ["SP"] in
+def SP : ProgMinerLabReg<14, "r14">, DwarfRegNum<[14]>;
+
+// frame pointer
+let AltNames = ["FP"] in
+def FP : ProgMinerLabReg<15, "r15">, DwarfRegNum<[15]>;
+
 // Classes
 def GPR : RegisterClass<"ProgMinerLab", [i32], 32,
-    (add R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15)>;
+    (add R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, SP, FP)>;
