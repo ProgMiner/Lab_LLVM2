@@ -1,6 +1,7 @@
 
 add_llvm_component_library(LLVMProgMinerLabDesc
     ProgMinerLabMCTargetDesc.cpp
+    ProgMinerLabMCAsmInfo.cpp
 
     LINK_COMPONENTS
     MC
