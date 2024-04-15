@@ -6,8 +6,10 @@
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/TargetRegistry.h"
 
-#include "ProgMinerLabMCAsmInfo.h"
 #include "TargetInfo/ProgMinerLabTargetInfo.h"
+#include "ProgMinerLabTargetStreamer.h"
+#include "ProgMinerLabInstPrinter.h"
+#include "ProgMinerLabMCAsmInfo.h"
 
 
 using namespace llvm;
@@ -59,6 +61,25 @@ static MCAsmInfo * createProgMinerLabMCAsmInfo(
     return MAI;
 }
 
+static MCInstPrinter * createProgMinerLabMCInstPrinter(
+    const Triple & T,
+    unsigned SyntaxVariant,
+    const MCAsmInfo & MAI,
+    const MCInstrInfo & MII,
+    const MCRegisterInfo & MRI
+) {
+    return new ProgMinerLabInstPrinter(MAI, MII, MRI);
+}
+
+static MCTargetStreamer * createTargetAsmStreamer(
+    MCStreamer & S,
+    formatted_raw_ostream & OS,
+    MCInstPrinter * InstPrint,
+    bool isVerboseAsm
+) {
+    return new ProgMinerLabTargetStreamer(S);
+}
+
 // We need to define this function for linking succeed
 extern "C" void LLVMInitializeProgMinerLabTargetMC() {
     Target & TheProgMinerLabTarget = getTheProgMinerLabTarget();
@@ -71,6 +92,10 @@ extern "C" void LLVMInitializeProgMinerLabTargetMC() {
     // Register the MC instruction info
     TargetRegistry::RegisterMCInstrInfo(TheProgMinerLabTarget, createProgMinerLabMCInstrInfo);
 
-    // Register the MC subtarget info.
+    // Register the MC subtarget info
     TargetRegistry::RegisterMCSubtargetInfo(TheProgMinerLabTarget, createProgMinerLabMCSubtargetInfo);
+
+    // Register the MCInstPrinter
+    TargetRegistry::RegisterMCInstPrinter(TheProgMinerLabTarget, createProgMinerLabMCInstPrinter);
+    TargetRegistry::RegisterAsmTargetStreamer(TheProgMinerLabTarget, createTargetAsmStreamer);
 }

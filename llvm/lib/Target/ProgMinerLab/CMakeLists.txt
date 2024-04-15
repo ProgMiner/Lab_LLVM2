@@ -4,8 +4,9 @@ add_llvm_component_group(ProgMinerLab)
 set(LLVM_TARGET_DEFINITIONS ProgMinerLab.td)
 
 tablegen(LLVM ProgMinerLabGenRegisterInfo.inc -gen-register-info)
-tablegen(LLVM ProgMinerLabGenInstrInfo.inc -gen-instr-info)
 tablegen(LLVM ProgMinerLabGenSubtargetInfo.inc -gen-subtarget)
+tablegen(LLVM ProgMinerLabGenInstrInfo.inc -gen-instr-info)
+tablegen(LLVM ProgMinerLabGenAsmWriter.inc -gen-asm-writer)
 
 add_public_tablegen_target(ProgMinerLabCommonTableGen)
 
