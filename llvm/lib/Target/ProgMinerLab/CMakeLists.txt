@@ -3,6 +3,7 @@ add_llvm_component_group(ProgMinerLab)
 
 set(LLVM_TARGET_DEFINITIONS ProgMinerLab.td)
 
+tablegen(LLVM ProgMinerLabGenMCPseudoLowering.inc -gen-pseudo-lowering)
 tablegen(LLVM ProgMinerLabGenRegisterInfo.inc -gen-register-info)
 tablegen(LLVM ProgMinerLabGenSubtargetInfo.inc -gen-subtarget)
 tablegen(LLVM ProgMinerLabGenInstrInfo.inc -gen-instr-info)
@@ -16,6 +17,7 @@ add_llvm_target(ProgMinerLabCodeGen
     ProgMinerLabFrameLowering.cpp
     ProgMinerLabRegisterInfo.cpp
     ProgMinerLabISelDagToDag.cpp
+    ProgMinerLabAsmPrinter.cpp
     ProgMinerLabInstrInfo.cpp
     ProgMinerLabSubtarget.cpp
 

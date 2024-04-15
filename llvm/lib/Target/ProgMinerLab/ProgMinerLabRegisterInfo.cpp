@@ -13,7 +13,7 @@
 #include "llvm/ADT/BitVector.h"
 #include "llvm/IR/Function.h"
 
-#include "ProgMinerLab.h"
+#include "MCTargetDesc/ProgMinerLabMCTargetDesc.h"
 #include "ProgMinerLabFrameLowering.h"
 #include "ProgMinerLabInstrInfo.h"
 #include "ProgMinerLabSubtarget.h"
