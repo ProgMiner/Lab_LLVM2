@@ -4,6 +4,8 @@ add_llvm_component_group(ProgMinerLab)
 set(LLVM_TARGET_DEFINITIONS ProgMinerLab.td)
 
 tablegen(LLVM ProgMinerLabGenMCPseudoLowering.inc -gen-pseudo-lowering)
+tablegen(LLVM ProgMinerLabGenMCCodeEmitter.inc -gen-emitter)
+
 tablegen(LLVM ProgMinerLabGenRegisterInfo.inc -gen-register-info)
 tablegen(LLVM ProgMinerLabGenSubtargetInfo.inc -gen-subtarget)
 tablegen(LLVM ProgMinerLabGenCallingConv.inc -gen-callingconv)

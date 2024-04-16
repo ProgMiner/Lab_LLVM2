@@ -80,8 +80,8 @@ class UnaryInst<bits<4> op, dag outs, dag ins, string asmstr, list<dag> pattern>
 
     bits<4> reg;
 
-    let Inst{7-4} = op;
-    let Inst{3-0} = reg;
+    let Inst{7-4} = reg;
+    let Inst{3-0} = op;
 }
 
 // binary instruction - 8-bit opcode + 2 register operands
@@ -91,9 +91,9 @@ class BinaryInst<bits<8> op, dag outs, dag ins, string asmstr, list<dag> pattern
     bits<4> reg1;
     bits<4> reg2;
 
-    let Inst{15-8} = op;
-    let Inst{7-4} = reg1;
-    let Inst{3-0} = reg2;
+    let Inst{15-12} = reg2;
+    let Inst{11-8} = reg1;
+    let Inst{7-0} = op;
 }
 
 // small constant instruction - 8-bit opcode + 8-bit constant
@@ -102,8 +102,8 @@ class SmallConstInst<bits<8> op, dag outs, dag ins, string asmstr, list<dag> pat
 
     bits<8> imm;
 
-    let Inst{15-8} = op;
-    let Inst{7-0} = imm;
+    let Inst{15-8} = imm;
+    let Inst{7-0} = op;
 }
 
 // large constant instruction - 8-bit opcode + 32-bit constant
@@ -112,8 +112,8 @@ class LargeConstInst<bits<8> op, dag outs, dag ins, string asmstr, list<dag> pat
 
     bits<32> imm;
 
-    let Inst{39-32} = op;
-    let Inst{31-0} = imm;
+    let Inst{39-8} = imm;
+    let Inst{7-0} = op;
 }
 
 // small constant register instruction - 4-bit opcode + register + 8-bit constant
@@ -123,9 +123,9 @@ class SmallConstRegInst<bits<4> op, dag outs, dag ins, string asmstr, list<dag> 
     bits<8> imm;
     bits<4> reg;
 
-    let Inst{15-12} = op;
-    let Inst{11-8} = reg;
-    let Inst{7-0} = imm;
+    let Inst{15-8} = imm;
+    let Inst{7-4} = reg;
+    let Inst{3-0} = op;
 }
 
 // large constant register instruction - 4-bit opcode + register + 32-bit constant
@@ -135,9 +135,9 @@ class LargeConstRegInst<bits<4> op, dag outs, dag ins, string asmstr, list<dag> 
     bits<32> imm;
     bits<4> reg;
 
-    let Inst{39-36} = op;
-    let Inst{35-32} = reg;
-    let Inst{31-0} = imm;
+    let Inst{39-8} = imm;
+    let Inst{7-4} = reg;
+    let Inst{3-0} = op;
 }
 
 // pseudo instruction

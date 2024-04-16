@@ -85,16 +85,22 @@ extern "C" void LLVMInitializeProgMinerLabTargetMC() {
 
     RegisterMCAsmInfoFn X(TheProgMinerLabTarget, createProgMinerLabMCAsmInfo);
 
-    // Register the MC register info
+    // register the MC register info
     TargetRegistry::RegisterMCRegInfo(TheProgMinerLabTarget, createProgMinerLabMCRegisterInfo);
 
-    // Register the MC instruction info
+    // register the MC instruction info
     TargetRegistry::RegisterMCInstrInfo(TheProgMinerLabTarget, createProgMinerLabMCInstrInfo);
 
-    // Register the MC subtarget info
+    // register the MC subtarget info
     TargetRegistry::RegisterMCSubtargetInfo(TheProgMinerLabTarget, createProgMinerLabMCSubtargetInfo);
 
-    // Register the MCInstPrinter
+    // register the MCInstPrinter
     TargetRegistry::RegisterMCInstPrinter(TheProgMinerLabTarget, createProgMinerLabMCInstPrinter);
     TargetRegistry::RegisterAsmTargetStreamer(TheProgMinerLabTarget, createTargetAsmStreamer);
+
+    // register the MC Code Emitter
+    TargetRegistry::RegisterMCCodeEmitter(TheProgMinerLabTarget, createProgMinerLabMCCodeEmitter);
+
+    // register the asm backend
+    TargetRegistry::RegisterMCAsmBackend(TheProgMinerLabTarget, createProgMinerLabAsmBackend);
 }
