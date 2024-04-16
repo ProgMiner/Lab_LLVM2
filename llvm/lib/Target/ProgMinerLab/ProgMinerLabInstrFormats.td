@@ -67,42 +67,80 @@ class ProgMinerLabInst40<dag outs, dag ins, string asmstr, list<dag> pattern>
 
 // Instruction formats
 
+// simple instruction - 8-bit opcode without operands
 class SimpleInst<bits<8> op, dag outs, dag ins, string asmstr, list<dag> pattern>
     : ProgMinerLabInst8<outs, ins, asmstr, pattern> {
 
     let Inst = op;
 }
 
-class ArithInst<bits<8> op, dag outs, dag ins, string asmstr, list<dag> pattern>
-    : ProgMinerLabInst16<outs, ins, asmstr, pattern> {
+// unary instruction - 4-bit opcode + register operand
+class UnaryInst<bits<4> op, dag outs, dag ins, string asmstr, list<dag> pattern>
+    : ProgMinerLabInst8<outs, ins, asmstr, pattern> {
 
-    bits<4> r1 = 0;
-    bits<4> r2 = 0;
+    bits<4> reg;
 
-    let Inst{15-8} = op;
-    let Inst{7-4} = r1;
-    let Inst{3-0} = r2;
+    let Inst{7-4} = op;
+    let Inst{3-0} = reg;
 }
 
+// binary instruction - 8-bit opcode + 2 register operands
+class BinaryInst<bits<8> op, dag outs, dag ins, string asmstr, list<dag> pattern>
+    : ProgMinerLabInst16<outs, ins, asmstr, pattern> {
+
+    bits<4> reg1;
+    bits<4> reg2;
+
+    let Inst{15-8} = op;
+    let Inst{7-4} = reg1;
+    let Inst{3-0} = reg2;
+}
+
+// small constant instruction - 8-bit opcode + 8-bit constant
 class SmallConstInst<bits<8> op, dag outs, dag ins, string asmstr, list<dag> pattern>
     : ProgMinerLabInst16<outs, ins, asmstr, pattern> {
 
-    bits<8> imm = 0;
+    bits<8> imm;
 
     let Inst{15-8} = op;
     let Inst{7-0} = imm;
 }
 
+// large constant instruction - 8-bit opcode + 32-bit constant
 class LargeConstInst<bits<8> op, dag outs, dag ins, string asmstr, list<dag> pattern>
     : ProgMinerLabInst40<outs, ins, asmstr, pattern> {
 
-    bits<32> imm = 0;
+    bits<32> imm;
 
     let Inst{39-32} = op;
     let Inst{31-0} = imm;
 }
 
-// Pseudo instructions format
+// small constant register instruction - 4-bit opcode + register + 8-bit constant
+class SmallConstRegInst<bits<4> op, dag outs, dag ins, string asmstr, list<dag> pattern>
+    : ProgMinerLabInst16<outs, ins, asmstr, pattern> {
+
+    bits<8> imm;
+    bits<4> reg;
+
+    let Inst{15-12} = op;
+    let Inst{11-8} = reg;
+    let Inst{7-0} = imm;
+}
+
+// large constant register instruction - 4-bit opcode + register + 32-bit constant
+class LargeConstRegInst<bits<4> op, dag outs, dag ins, string asmstr, list<dag> pattern>
+    : ProgMinerLabInst40<outs, ins, asmstr, pattern> {
+
+    bits<32> imm;
+    bits<4> reg;
+
+    let Inst{39-36} = op;
+    let Inst{35-32} = reg;
+    let Inst{31-0} = imm;
+}
+
+// pseudo instruction
 class ProgMinerLabPseudoInst<dag outs, dag ins, string asmstr, list<dag> pattern>
    : ProgMinerLabInst<1, outs, ins, asmstr, pattern> {
 

@@ -21,20 +21,11 @@ def RET : SimpleInst<0x01, (outs), (ins), "RET", [(ProgMinerLab_ret)]>;
 
 // Constant loading
 
-def CONSTs : SmallConstInst<?, (outs GPR:$r), (ins imm8:$imm), "CONSTs $r, $imm",
-    [(set GPR:$r, imm8:$imm)]> {
+let isMoveImm = true in {
 
-    bits<4> r = 0;
+    def CONSTs : SmallConstRegInst<0x2, (outs GPR:$reg), (ins imm8:$imm), "CONSTs $reg, $imm",
+        [(set GPR:$reg, imm8:$imm)]>;
 
-    let Inst{15-12} = 2;
-    let Inst{11-8} = r;
-}
-
-def CONSTl : LargeConstInst<?, (outs GPR:$r), (ins imm32:$imm), "CONSTl $r, $imm",
-    [(set GPR:$r, imm32:$imm)]> {
-
-    bits<4> r = 0;
-
-    let Inst{39-36} = 3;
-    let Inst{35-32} = r;
+    def CONSTl : LargeConstRegInst<0x3, (outs GPR:$reg), (ins imm32:$imm), "CONSTl $reg, $imm",
+        [(set GPR:$reg, imm32:$imm)]>;
 }
