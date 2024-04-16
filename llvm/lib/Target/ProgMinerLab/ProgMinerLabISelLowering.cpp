@@ -24,16 +24,15 @@ ProgMinerLabTargetLowering::ProgMinerLabTargetLowering(
 
     setSchedulingPreference(Sched::Source);
 
-/*
-    // TODO
-
     for (unsigned Opc = 0; Opc < ISD::BUILTIN_OP_END; ++Opc) {
       setOperationAction(Opc, MVT::i32, Expand);
     }
 
     setOperationAction(ISD::ADD, MVT::i32, Legal);
     setOperationAction(ISD::MUL, MVT::i32, Legal);
+
     // ...
+
     setOperationAction(ISD::LOAD, MVT::i32, Legal);
     setOperationAction(ISD::STORE, MVT::i32, Legal);
 
@@ -45,7 +44,6 @@ ProgMinerLabTargetLowering::ProgMinerLabTargetLowering(
     setOperationAction(ISD::FRAMEADDR, MVT::i32, Legal);
     // setOperationAction(ISD::FrameIndex, MVT::i32, Custom);
     // setOperationAction(ISD::GlobalAddress, MVT::i32, Custom);
-*/
 }
 
 const char * ProgMinerLabTargetLowering::getTargetNodeName(unsigned Opcode) const {
@@ -638,32 +636,27 @@ bool ProgMinerLabTargetLowering::isLegalAddressingMode(
     unsigned AS,
     Instruction * I
 ) const {
-    llvm_unreachable("isLegalAddressingMode"); // TODO
-
-/*
     // no global is ever allowed as a base
     if (AM.BaseGV) {
         return false;
     }
 
-    if (!isInt<16>(AM.BaseOffs)) {
+    if (!isInt<32>(AM.BaseOffs)) {
         return false;
     }
 
     switch (AM.Scale) {
-    case 0: // "r+i" or just "i", depending on HasBaseReg.
-        break;
+
+    // "r+i" or just "i", depending on HasBaseReg
+    case 0: return true;
 
     case 1:
-        if (!AM.HasBaseReg) { // allow "r+i".
-            break;
+        if (!AM.HasBaseReg) { // allow "r+i"
+            return true;
         }
 
-        return false; // disallow "r+r" or "r+r+i".
-    default:
-        return false;
-    }
+        return false; // disallow "r+r" or "r+r+i"
 
-    return true;
-*/
+    default: return false;
+    }
 }

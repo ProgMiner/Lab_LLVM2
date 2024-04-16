@@ -157,9 +157,9 @@ StackOffset ProgMinerLabFrameLowering::getFrameIndexReference(
         FrameReg = RI->getFrameRegister(MF);
 
         if (hasFP(MF)) {
-          Offset += UFI->getVarArgsSaveSize();
+            Offset += UFI->getVarArgsSaveSize();
         } else {
-          Offset += MFI.getStackSize();
+            Offset += MFI.getStackSize();
         }
     }
 
