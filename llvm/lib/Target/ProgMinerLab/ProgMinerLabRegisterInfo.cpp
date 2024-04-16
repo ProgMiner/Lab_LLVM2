@@ -27,7 +27,7 @@ using namespace llvm;
 
 
 ProgMinerLabRegisterInfo::ProgMinerLabRegisterInfo()
-    : ProgMinerLabGenRegisterInfo(ProgMinerLab::R0)
+    : ProgMinerLabGenRegisterInfo(ProgMinerLab::NoRegister)
     {}
 
 const MCPhysReg * ProgMinerLabRegisterInfo::getCalleeSavedRegs(const MachineFunction * MF) const {
@@ -53,10 +53,6 @@ BitVector ProgMinerLabRegisterInfo::getReservedRegs(const MachineFunction & MF) 
     }
 
     return Reserved;
-}
-
-bool ProgMinerLabRegisterInfo::requiresRegisterScavenging(const MachineFunction & MF) const {
-    return false; // TODO: what for?
 }
 
 // TODO: rewrite!

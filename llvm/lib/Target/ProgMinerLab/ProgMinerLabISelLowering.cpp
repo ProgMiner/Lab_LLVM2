@@ -1,5 +1,8 @@
 #include "ProgMinerLabISelLowering.h"
 
+#include "llvm/CodeGen/CallingConvLower.h"
+
+#include "MCTargetDesc/ProgMinerLabMCTargetDesc.h"
 #include "ProgMinerLabRegisterInfo.h"
 #include "ProgMinerLabSubtarget.h"
 
@@ -14,11 +17,12 @@ ProgMinerLabTargetLowering::ProgMinerLabTargetLowering(
 
     computeRegisterProperties(STI.getRegisterInfo());
 
+    setStackPointerRegisterToSaveRestore(ProgMinerLab::SP);
+
+    setSchedulingPreference(Sched::Source);
+
 /*
     // TODO
-    setStackPointerRegisterToSaveRestore(ProgMinerLab::R1);
-
-    // setSchedulingPreference(Sched::Source);
 
     for (unsigned Opc = 0; Opc < ISD::BUILTIN_OP_END; ++Opc) {
       setOperationAction(Opc, MVT::i32, Expand);
@@ -43,13 +47,82 @@ ProgMinerLabTargetLowering::ProgMinerLabTargetLowering(
 
 const char * ProgMinerLabTargetLowering::getTargetNodeName(unsigned Opcode) const {
     switch (Opcode) {
-    case ProgMinerLabISD::NOP: return "ProgMinerLabISD::NOP";
+    case ProgMinerLabISD::RET: return "ProgMinerLabISD::RET";
     /*
     case ProgMinerLabISD::CALL: return "ProgMinerLabISD::CALL";
-    case ProgMinerLabISD::RET: return "ProgMinerLabISD::RET";
     */
     default: return nullptr;
     }
+}
+
+//===----------------------------------------------------------------------===//
+//  Misc Lower Operation implementation
+//===----------------------------------------------------------------------===//
+
+#include "ProgMinerLabGenCallingConv.inc"
+
+//===----------------------------------------------------------------------===//
+//  Formal Arguments Calling Convention Implementation
+//===----------------------------------------------------------------------===//
+
+// TODO: rewrite
+static SDValue convertValVTToLocVT(
+    SelectionDAG & DAG,
+    SDValue Val,
+    const CCValAssign & VA,
+    const SDLoc & DL,
+    const ProgMinerLabSubtarget & Subtarget
+) {
+    EVT LocVT = VA.getLocVT();
+
+    if (VA.getValVT() == MVT::f32) {
+        llvm_unreachable("");
+    }
+
+    switch (VA.getLocInfo()) {
+    case CCValAssign::Full:
+        break;
+
+    case CCValAssign::BCvt:
+        llvm_unreachable("");
+        Val = DAG.getNode(ISD::BITCAST, DL, LocVT, Val);
+        break;
+
+    default:
+        llvm_unreachable("Unexpected CCValAssign::LocInfo");
+    }
+
+    return Val;
+}
+
+// convert Val to a ValVT
+// should not be called for CCValAssign::Indirect values
+// TODO: rewrite
+static SDValue convertLocVTToValVT(
+    SelectionDAG & DAG,
+    SDValue Val,
+    const CCValAssign & VA,
+    const SDLoc & DL,
+    const ProgMinerLabSubtarget & Subtarget
+) {
+    if (VA.getValVT() == MVT::f32) {
+        llvm_unreachable("");
+    }
+
+    switch (VA.getLocInfo()) {
+    case CCValAssign::Full:
+        break;
+
+    case CCValAssign::BCvt:
+        llvm_unreachable("");
+        Val = DAG.getNode(ISD::BITCAST, DL, VA.getValVT(), Val);
+        break;
+
+    default:
+        llvm_unreachable("Unexpected CCValAssign::LocInfo");
+    }
+
+    return Val;
 }
 
 SDValue ProgMinerLabTargetLowering::LowerFormalArguments(
@@ -64,6 +137,32 @@ SDValue ProgMinerLabTargetLowering::LowerFormalArguments(
     return Chain; // TODO
 }
 
+//===----------------------------------------------------------------------===//
+//  Return Value Calling Convention Implementation
+//===----------------------------------------------------------------------===//
+
+bool ProgMinerLabTargetLowering::CanLowerReturn(
+    CallingConv::ID CallConv,
+    MachineFunction & MF,
+    bool IsVarArg,
+    const SmallVectorImpl<ISD::OutputArg> & Outs,
+    LLVMContext & Context
+) const {
+    SmallVector<CCValAssign, 16> RVLocs;
+
+    CCState CCInfo(CallConv, IsVarArg, MF, RVLocs, Context);
+
+    if (!CCInfo.CheckReturn(Outs, RetCC_ProgMinerLab)) {
+        return false;
+    }
+
+    if (CCInfo.getStackSize() != 0 && IsVarArg) {
+        llvm_unreachable("stack size != 0 and is vararg"); // TODO: what for
+    }
+
+    return true;
+}
+
 SDValue ProgMinerLabTargetLowering::LowerReturn(
     SDValue Chain,
     CallingConv::ID CallConv,
@@ -73,7 +172,44 @@ SDValue ProgMinerLabTargetLowering::LowerReturn(
     const SDLoc & DL,
     SelectionDAG & DAG
 ) const {
-    return Chain; // TODO
+    const MachineFunction & MF = DAG.getMachineFunction();
+    const ProgMinerLabSubtarget & STI = MF.getSubtarget<ProgMinerLabSubtarget>();
+
+    // stores the assignment of the return value to a location
+    SmallVector<CCValAssign, 16> RVLocs;
+
+    // info about the registers and stack slot
+    CCState CCInfo(CallConv, IsVarArg, DAG.getMachineFunction(), RVLocs, *DAG.getContext());
+
+    CCInfo.AnalyzeReturn(Outs, RetCC_ProgMinerLab);
+
+    SDValue Glue;
+    SmallVector<SDValue, 4> RetOps(1, Chain);
+
+    // copy the result values into the output registers
+    for (unsigned i = 0, e = RVLocs.size(); i < e; ++i) {
+        CCValAssign &VA = RVLocs[i];
+        SDValue Val = OutVals[i];
+
+        // TODO: what for?
+        assert(VA.isRegLoc() && "Can only return in registers!");
+
+        Val = convertValVTToLocVT(DAG, Val, VA, DL, STI);
+        Chain = DAG.getCopyToReg(Chain, DL, VA.getLocReg(), Val, Glue);
+
+        // guarantee that all emitted copies are stuck together
+        Glue = Chain.getValue(1);
+        RetOps.push_back(DAG.getRegister(VA.getLocReg(), VA.getLocVT()));
+    }
+
+    RetOps[0] = Chain; // update chain
+
+    // add the glue node if we have it
+    if (Glue.getNode()) {
+        RetOps.push_back(Glue);
+    }
+
+    return DAG.getNode(ProgMinerLabISD::RET, DL, MVT::Other, RetOps);
 }
 
 //===----------------------------------------------------------------------===//

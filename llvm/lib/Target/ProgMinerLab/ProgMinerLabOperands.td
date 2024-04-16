@@ -20,7 +20,7 @@ class Immediate<ValueType vt, code pred, string asmop> : Operand<vt>, ImmLeaf<vt
 
 // imm8 predicate - 8-bit immediate
 def Imm8AsmOperand : ImmAsmOperand<"Imm8">;
-def imm8 : Immediate<i8, [{ return true; }], "Imm8AsmOperand"> {
+def imm8 : Immediate<i32, [{ return -128 <= Imm && Imm < 128; }], "Imm8AsmOperand"> {
 
     let EncoderMethod = "getImm8OpValue";
     let DecoderMethod = "decodeImm8Operand";
@@ -28,7 +28,7 @@ def imm8 : Immediate<i8, [{ return true; }], "Imm8AsmOperand"> {
 
 // imm32 predicate - 32-bit immediate
 def Imm32AsmOperand : ImmAsmOperand<"Imm32">;
-def imm32 : Immediate<i32, [{ return true; }], "Imm32AsmOperand"> {
+def imm32 : Immediate<i32, [{ return INT32_MIN <= Imm && Imm <= INT32_MAX; }], "Imm32AsmOperand"> {
 
     let EncoderMethod = "getImm32OpValue";
     let DecoderMethod = "decodeImm32Operand";

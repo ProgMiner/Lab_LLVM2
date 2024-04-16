@@ -22,8 +22,6 @@ public:
 
     BitVector getReservedRegs(const MachineFunction & MF) const override;
 
-    bool requiresRegisterScavenging(const MachineFunction & MF) const override;
-
     bool eliminateFrameIndex(
         MachineBasicBlock::iterator II,
         int SPAdj,

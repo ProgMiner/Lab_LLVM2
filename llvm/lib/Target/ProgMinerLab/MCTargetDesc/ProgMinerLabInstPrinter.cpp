@@ -50,3 +50,25 @@ void ProgMinerLabInstPrinter::printOperand(const MCInst * MI, int OpNo, raw_ostr
     assert(MO.isExpr() && "Unknown operand kind in printOperand");
     MO.getExpr()->print(O, &MAI);
 }
+
+void ProgMinerLabInstPrinter::printImm8AsmOperand(const MCInst * MI, int OpNum, raw_ostream & O) {
+    if (MI->getOperand(OpNum).isImm()) {
+        const int64_t Value = MI->getOperand(OpNum).getImm();
+
+        assert(isInt<8>(Value) && "Invalid argument, value must be in range [-128, 127]");
+        O << Value;
+    } else {
+        printOperand(MI, OpNum, O);
+    }
+}
+
+void ProgMinerLabInstPrinter::printImm32AsmOperand(const MCInst * MI, int OpNum, raw_ostream & O) {
+    if (MI->getOperand(OpNum).isImm()) {
+        const int64_t Value = MI->getOperand(OpNum).getImm();
+
+        assert(isInt<32>(Value) && "Invalid argument, value must be 32-bit");
+        O << Value;
+    } else {
+        printOperand(MI, OpNum, O);
+    }
+}

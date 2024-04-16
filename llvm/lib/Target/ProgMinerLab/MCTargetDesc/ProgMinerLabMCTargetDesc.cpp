@@ -28,7 +28,7 @@ using namespace llvm;
 static MCRegisterInfo * createProgMinerLabMCRegisterInfo(const Triple & TT) {
     MCRegisterInfo * const X = new MCRegisterInfo();
 
-    InitProgMinerLabMCRegisterInfo(X, ProgMinerLab::R0);
+    InitProgMinerLabMCRegisterInfo(X, ProgMinerLab::NoRegister);
     return X;
 }
 

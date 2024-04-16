@@ -8,7 +8,7 @@
 
 def RetCC_ProgMinerLab : CallingConv<[
 
-    // promote i8/i16 arguments to i32
+    // promote i8/i16 return values to i32
     CCIfType<[i8, i16], CCPromoteToType<i32>>,
 
     // i32 return values

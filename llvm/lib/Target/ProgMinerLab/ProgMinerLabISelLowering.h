@@ -15,7 +15,7 @@ enum NodeType : unsigned {
 
     // start the numbering where the builtin ops and target ops leave off
     FIRST_NUMBER = ISD::BUILTIN_OP_END,
-    NOP,
+    RET,
 };
 
 } // namespace ProgMinerLabISD
@@ -60,6 +60,14 @@ private:
         SmallVectorImpl<SDValue> & InVals
     ) const override;
 
+    bool CanLowerReturn(
+        CallingConv::ID CallConv,
+        MachineFunction & MF,
+        bool IsVarArg,
+        const SmallVectorImpl<ISD::OutputArg> & ArgsFlags,
+        LLVMContext & Context
+    ) const override;
+
     SDValue LowerReturn(
         SDValue Chain,
         CallingConv::ID CallConv,
@@ -82,14 +90,6 @@ private:
     SDValue LowerCall(
         TargetLowering::CallLoweringInfo & CLI,
         SmallVectorImpl<SDValue> & InVals
-    ) const override;
-
-    bool CanLowerReturn(
-        CallingConv::ID CallConv,
-        MachineFunction & MF,
-        bool IsVarArg,
-        const SmallVectorImpl<ISD::OutputArg> & ArgsFlags,
-        LLVMContext & Context
     ) const override;
 */
 };
