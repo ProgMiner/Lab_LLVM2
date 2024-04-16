@@ -1,8 +1,11 @@
 #include "ProgMinerLabISelLowering.h"
 
 #include "llvm/CodeGen/CallingConvLower.h"
+#include "llvm/CodeGen/MachineFrameInfo.h"
 
 #include "MCTargetDesc/ProgMinerLabMCTargetDesc.h"
+#include "ProgMinerLabMachineFunctionInfo.h"
+#include "ProgMinerLabTargetMachine.h"
 #include "ProgMinerLabRegisterInfo.h"
 #include "ProgMinerLabSubtarget.h"
 
@@ -48,9 +51,7 @@ ProgMinerLabTargetLowering::ProgMinerLabTargetLowering(
 const char * ProgMinerLabTargetLowering::getTargetNodeName(unsigned Opcode) const {
     switch (Opcode) {
     case ProgMinerLabISD::RET: return "ProgMinerLabISD::RET";
-    /*
     case ProgMinerLabISD::CALL: return "ProgMinerLabISD::CALL";
-    */
     default: return nullptr;
     }
 }
@@ -62,8 +63,238 @@ const char * ProgMinerLabTargetLowering::getTargetNodeName(unsigned Opcode) cons
 #include "ProgMinerLabGenCallingConv.inc"
 
 //===----------------------------------------------------------------------===//
+//  Call Calling Convention Implementation
+//===----------------------------------------------------------------------===//
+
+static Align getPrefTypeAlign(EVT VT, SelectionDAG & DAG) {
+    return DAG.getDataLayout().getPrefTypeAlign(VT.getTypeForEVT(*DAG.getContext()));
+}
+
+// TODO: rewrite
+SDValue ProgMinerLabTargetLowering::LowerCall(
+    TargetLowering::CallLoweringInfo & CLI,
+    SmallVectorImpl<SDValue> & InVals
+) const {
+    SelectionDAG &DAG = CLI.DAG;
+    SDLoc &DL = CLI.DL;
+
+    SmallVectorImpl<ISD::OutputArg> &Outs = CLI.Outs;
+    SmallVectorImpl<SDValue> &OutVals = CLI.OutVals;
+    SmallVectorImpl<ISD::InputArg> &Ins = CLI.Ins;
+
+    SDValue Chain = CLI.Chain;
+    SDValue Callee = CLI.Callee;
+    assert(!CLI.IsTailCall);
+
+    CallingConv::ID CallConv = CLI.CallConv;
+    bool IsVarArg = CLI.IsVarArg;
+
+    EVT PtrVT = getPointerTy(DAG.getDataLayout());
+
+    MachineFunction & MF = DAG.getMachineFunction();
+
+    // analyze the operands of the call, assigning locations to each operand
+    SmallVector<CCValAssign, 16> ArgLocs;
+    CCState CCInfo(CallConv, IsVarArg, MF, ArgLocs, *DAG.getContext());
+    CCInfo.AnalyzeCallOperands(Outs, CC_ProgMinerLab);
+
+    // get a count of how many bytes are to be pushed on the stack
+    unsigned NumBytes = CCInfo.getStackSize();
+
+    // Create local copies for byval args
+    SmallVector<SDValue, 8> ByValArgs;
+    for (unsigned i = 0, e = Outs.size(); i != e; ++i) {
+        ISD::ArgFlagsTy Flags = Outs[i].Flags;
+
+        if (!Flags.isByVal()) {
+            continue;
+        }
+
+        SDValue Arg = OutVals[i];
+        unsigned Size = Flags.getByValSize();
+        Align Alignment = Flags.getNonZeroByValAlign();
+
+        int FI = MF.getFrameInfo().CreateStackObject(Size, Alignment, /* isSS = */ false);
+        SDValue FIPtr = DAG.getFrameIndex(FI, getPointerTy(DAG.getDataLayout()));
+        SDValue SizeNode = DAG.getConstant(Size, DL, MVT::i32);
+
+        Chain = DAG.getMemcpy(Chain, DL, FIPtr, Arg, SizeNode, Alignment, /* IsVolatile = */ false,
+            /* AlwaysInline = */ false, false, MachinePointerInfo(), MachinePointerInfo());
+
+        ByValArgs.push_back(FIPtr);
+    }
+
+    Chain = DAG.getCALLSEQ_START(Chain, NumBytes, 0, CLI.DL);
+
+    // copy argument values to their designated locations
+    SmallVector<std::pair<Register, SDValue>, 8> RegsToPass;
+    SmallVector<SDValue, 8> MemOpChains;
+    SDValue StackPtr;
+    for (unsigned i = 0, j = 0, e = ArgLocs.size(); i != e; ++i) {
+        CCValAssign &VA = ArgLocs[i];
+        SDValue ArgValue = OutVals[i];
+        ISD::ArgFlagsTy Flags = Outs[i].Flags;
+
+        // promote the value if needed
+        // for now, only handle fully promoted and indirect arguments
+        if (VA.getLocInfo() == CCValAssign::Indirect) {
+
+            // store the argument in a stack slot and pass its address
+            Align StackAlign = std::max(getPrefTypeAlign(Outs[i].ArgVT, DAG),
+                getPrefTypeAlign(ArgValue.getValueType(), DAG));
+
+            TypeSize StoredSize = ArgValue.getValueType().getStoreSize();
+
+            unsigned ArgIndex = Outs[i].OrigArgIndex;
+            unsigned ArgPartOffset = Outs[i].PartOffset;
+            assert(ArgPartOffset == 0);
+
+            // calculate the total size to store
+            // we don't have access to what we're actually storing other than performing the loop
+            // and collecting the info
+            SmallVector<std::pair<SDValue, SDValue>> Parts;
+            while (i + 1 != e && Outs[i + 1].OrigArgIndex == ArgIndex) {
+                SDValue PartValue = OutVals[i + 1];
+                unsigned PartOffset = Outs[i + 1].PartOffset - ArgPartOffset;
+                SDValue Offset = DAG.getIntPtrConstant(PartOffset, DL);
+                EVT PartVT = PartValue.getValueType();
+                StoredSize += PartVT.getStoreSize();
+                StackAlign = std::max(StackAlign, getPrefTypeAlign(PartVT, DAG));
+                Parts.push_back(std::make_pair(PartValue, Offset));
+                ++i;
+            }
+
+            SDValue SpillSlot = DAG.CreateStackTemporary(StoredSize, StackAlign);
+            int FI = cast<FrameIndexSDNode>(SpillSlot)->getIndex();
+
+            MemOpChains.push_back(DAG.getStore(Chain, DL, ArgValue, SpillSlot,
+                MachinePointerInfo::getFixedStack(MF, FI)));
+
+            for (const auto & Part : Parts) {
+                SDValue PartValue = Part.first;
+                SDValue PartOffset = Part.second;
+
+                SDValue Address = DAG.getNode(ISD::ADD, DL, PtrVT, SpillSlot, PartOffset);
+                MemOpChains.push_back(DAG.getStore(Chain, DL, PartValue, Address,
+                    MachinePointerInfo::getFixedStack(MF, FI)));
+            }
+
+            ArgValue = SpillSlot;
+        } else {
+            assert(VA.getLocInfo() == CCValAssign::Full);
+        }
+
+        // Use local copy if it is a byval arg.
+        if (Flags.isByVal()) {
+            ArgValue = ByValArgs[j++];
+        }
+
+        if (VA.isRegLoc()) {
+            // queue up the argument copies and emit them at the end
+            RegsToPass.push_back(std::make_pair(VA.getLocReg(), ArgValue));
+        } else {
+            assert(VA.isMemLoc() && "Argument not register or memory");
+
+            // work out the address of the stack slot
+            if (!StackPtr.getNode()) {
+                StackPtr = DAG.getCopyFromReg(Chain, DL, ProgMinerLab::R1, PtrVT);
+            }
+
+            SDValue Address = DAG.getNode(ISD::ADD, DL, PtrVT, StackPtr,
+                DAG.getIntPtrConstant(VA.getLocMemOffset(), DL));
+
+            // emit the store
+            MemOpChains.push_back(DAG.getStore(Chain, DL, ArgValue, Address, MachinePointerInfo()));
+        }
+    }
+
+    // join the stores, which are independent of one another
+    if (!MemOpChains.empty()) {
+        Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, MemOpChains);
+    }
+
+    SDValue Glue;
+
+    // build a sequence of copy-to-reg nodes, chained and glued together
+    for (auto & Reg : RegsToPass) {
+        Chain = DAG.getCopyToReg(Chain, DL, Reg.first, Reg.second, Glue);
+        Glue = Chain.getValue(1);
+    }
+
+    // no external symbols support
+    if (GlobalAddressSDNode * S = dyn_cast<GlobalAddressSDNode>(Callee)) {
+        const GlobalValue * GV = S->getGlobal();
+
+        assert(getTargetMachine().shouldAssumeDSOLocal(*GV->getParent(), GV));
+        Callee = DAG.getTargetGlobalAddress(GV, DL, PtrVT, 0, 0);
+    }
+
+    // the first call operand is the chain and the second is the target address
+    SmallVector<SDValue, 8> Ops;
+    Ops.push_back(Chain);
+    Ops.push_back(Callee);
+
+    // add argument registers to the end of the list so that they are known live into the call
+    for (auto & Reg : RegsToPass) {
+        Ops.push_back(DAG.getRegister(Reg.first, Reg.second.getValueType()));
+    }
+
+    // add a register mask operand representing the call-preserved registers
+    const TargetRegisterInfo * TRI = STI.getRegisterInfo();
+
+    const uint32_t * Mask = TRI->getCallPreservedMask(MF, CallConv);
+    Ops.push_back(DAG.getRegisterMask(Mask));
+
+    // glue the call to the argument copies, if any
+    if (Glue.getNode()) {
+        Ops.push_back(Glue);
+    }
+
+    // emit the call
+    SDVTList NodeTys = DAG.getVTList(MVT::Other, MVT::Glue);
+
+    Chain = DAG.getNode(ProgMinerLabISD::CALL, DL, NodeTys, Ops);
+    DAG.addNoMergeSiteInfo(Chain.getNode(), CLI.NoMerge);
+    Glue = Chain.getValue(1);
+
+    // mark the end of the call, which is glued to the call itself
+    Chain = DAG.getCALLSEQ_END(Chain, DAG.getConstant(NumBytes, DL, PtrVT, true),
+        DAG.getConstant(0, DL, PtrVT, true), Glue, DL);
+
+    Glue = Chain.getValue(1);
+
+    // assign locations to each value returned by this call
+    SmallVector<CCValAssign, 16> RVLocs;
+    CCState RetCCInfo(CallConv, IsVarArg, MF, RVLocs, *DAG.getContext());
+    RetCCInfo.AnalyzeCallResult(Ins, RetCC_ProgMinerLab);
+
+    // copy all of the result registers out of their specified physreg
+    for (auto & VA : RVLocs) {
+
+        // copy the value out
+        SDValue RetValue = DAG.getCopyFromReg(Chain, DL, VA.getLocReg(), VA.getLocVT(), Glue);
+
+        // glue the RetValue to the end of the call sequence
+        Chain = RetValue.getValue(1);
+        Glue = RetValue.getValue(2);
+
+        assert(VA.getLocInfo() == CCValAssign::Full);
+        InVals.push_back(RetValue);
+    }
+
+    return Chain;
+}
+
+//===----------------------------------------------------------------------===//
 //  Formal Arguments Calling Convention Implementation
 //===----------------------------------------------------------------------===//
+
+static const MCPhysReg ArgGPRs[] = {
+    ProgMinerLab::R1,
+    ProgMinerLab::R2,
+    ProgMinerLab::R3,
+    ProgMinerLab::R4
+};
 
 // TODO: rewrite
 static SDValue convertValVTToLocVT(
@@ -125,6 +356,68 @@ static SDValue convertLocVTToValVT(
     return Val;
 }
 
+// TODO: rewrite
+static SDValue unpackFromRegLoc(
+    SelectionDAG & DAG,
+    SDValue Chain,
+    const CCValAssign & VA,
+    const SDLoc & DL,
+    const ProgMinerLabTargetLowering & TLI
+) {
+    MachineFunction & MF = DAG.getMachineFunction();
+    MachineRegisterInfo & RegInfo = MF.getRegInfo();
+    EVT LocVT = VA.getLocVT();
+    SDValue Val;
+
+    const TargetRegisterClass * RC = TLI.getRegClassFor(LocVT.getSimpleVT());
+    Register VReg = RegInfo.createVirtualRegister(RC);
+    RegInfo.addLiveIn(VA.getLocReg(), VReg);
+
+    Val = DAG.getCopyFromReg(Chain, DL, VReg, LocVT);
+    if (VA.getLocInfo() == CCValAssign::Indirect) {
+        return Val;
+    }
+
+    return convertLocVTToValVT(DAG, Val, VA, DL, TLI.getSubtarget());
+}
+
+// the caller is responsible for loading the full value
+// if the argument is passed with CCValAssign::Indirect
+// TODO: rewrite
+static SDValue unpackFromMemLoc(
+    SelectionDAG & DAG,
+    SDValue Chain,
+    const CCValAssign & VA,
+    const SDLoc & DL
+) {
+    MachineFunction & MF = DAG.getMachineFunction();
+    MachineFrameInfo & MFI = MF.getFrameInfo();
+    EVT LocVT = VA.getLocVT();
+    EVT ValVT = VA.getValVT();
+
+    EVT PtrVT = MVT::getIntegerVT(DAG.getDataLayout().getPointerSizeInBits(0));
+    int FI = MFI.CreateFixedObject(ValVT.getStoreSize(), VA.getLocMemOffset(),
+        /* IsImmutable = */ true);
+
+    SDValue FIN = DAG.getFrameIndex(FI, PtrVT);
+
+    ISD::LoadExtType ExtType;
+    switch (VA.getLocInfo()) {
+    case CCValAssign::Full:
+    case CCValAssign::Indirect:
+    case CCValAssign::BCvt:
+        ExtType = ISD::NON_EXTLOAD;
+        break;
+
+    default:
+        llvm_unreachable("Unexpected CCValAssign::LocInfo");
+    }
+
+    return DAG.getExtLoad(ExtType, DL, LocVT, Chain, FIN,
+        MachinePointerInfo::getFixedStack(DAG.getMachineFunction(), FI), ValVT);
+}
+
+// TODO: rewrite
 SDValue ProgMinerLabTargetLowering::LowerFormalArguments(
     SDValue Chain,
     CallingConv::ID CallConv,
@@ -134,7 +427,128 @@ SDValue ProgMinerLabTargetLowering::LowerFormalArguments(
     SelectionDAG & DAG,
     SmallVectorImpl<SDValue> & InVals
 ) const {
-    return Chain; // TODO
+    switch (CallConv) {
+    case CallingConv::C:
+    case CallingConv::Fast:
+        break;
+
+    default:
+        report_fatal_error("Unsupported calling convention");
+    }
+
+    MachineFunction & MF = DAG.getMachineFunction();
+    EVT PtrVT = getPointerTy(DAG.getDataLayout());
+
+    unsigned StackSlotSize = MVT(MVT::i32).getSizeInBits() / 8;
+
+    // used with vargs to acumulate store chains
+    std::vector<SDValue> OutChains;
+
+    // assign locations to all of the incoming arguments
+
+    SmallVector<CCValAssign, 16> ArgLocs;
+    CCState CCInfo(CallConv, IsVarArg, MF, ArgLocs, *DAG.getContext());
+    CCInfo.AnalyzeFormalArguments(Ins, CC_ProgMinerLab);
+
+    for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i) {
+        CCValAssign & VA = ArgLocs[i];
+
+        SDValue ArgValue;
+        if (VA.isRegLoc()) {
+            ArgValue = unpackFromRegLoc(DAG, Chain, VA, DL, *this);
+        } else {
+            ArgValue = unpackFromMemLoc(DAG, Chain, VA, DL);
+        }
+
+        if (VA.getLocInfo() == CCValAssign::Indirect) {
+            InVals.push_back(DAG.getLoad(VA.getValVT(), DL, Chain, ArgValue, MachinePointerInfo()));
+
+            unsigned ArgIndex = Ins[i].OrigArgIndex;
+            unsigned ArgPartOffset = Ins[i].PartOffset;
+            assert(ArgPartOffset == 0);
+
+            while (i + 1 != e && Ins[i + 1].OrigArgIndex == ArgIndex) {
+                CCValAssign &PartVA = ArgLocs[i + 1];
+
+                unsigned PartOffset = Ins[i + 1].PartOffset - ArgPartOffset;
+                SDValue Offset = DAG.getIntPtrConstant(PartOffset, DL);
+
+                SDValue Address = DAG.getNode(ISD::ADD, DL, PtrVT, ArgValue, Offset);
+                InVals.push_back(DAG.getLoad(PartVA.getValVT(), DL, Chain, Address,
+                    MachinePointerInfo()));
+
+                ++i;
+            }
+
+            continue;
+        }
+
+        InVals.push_back(ArgValue);
+    }
+
+    if (IsVarArg) {
+        ArrayRef<MCPhysReg> ArgRegs = ArrayRef(ArgGPRs);
+        unsigned Idx = CCInfo.getFirstUnallocated(ArgRegs);
+        const TargetRegisterClass * RC = &ProgMinerLab::GPRRegClass;
+
+        MachineFrameInfo & MFI = MF.getFrameInfo();
+        MachineRegisterInfo & RegInfo = MF.getRegInfo();
+        ProgMinerLabFunctionInfo * UFI = MF.getInfo<ProgMinerLabFunctionInfo>();
+
+        int VaArgOffset, VarArgsSaveSize;
+
+        // if all registers are allocated, then all varargs must be passed on the stack
+        // and we don't need to save any argregs
+        if (ArgRegs.size() == Idx) {
+            VaArgOffset = CCInfo.getStackSize();
+            VarArgsSaveSize = 0;
+        } else {
+            VarArgsSaveSize = StackSlotSize * (ArgRegs.size() - Idx);
+            VaArgOffset = -VarArgsSaveSize;
+        }
+
+        // record the frame index of the first variable argument
+        // which is a value necessary to VASTART
+        int FI = MFI.CreateFixedObject(StackSlotSize, VaArgOffset, true);
+        UFI->setVarArgsFrameIndex(FI);
+
+        // if saving an odd number of registers then create an extra stack slot
+        // to ensure that the frame pointer is 2*XLEN-aligned, which in turn ensures offsets
+        // to even-numbered registered remain 2*XLEN-aligned
+        if (Idx % 2) {
+            MFI.CreateFixedObject(StackSlotSize, VaArgOffset - (int) StackSlotSize, true);
+            VarArgsSaveSize += StackSlotSize;
+        }
+
+        // copy the integer registers that may have been used for passing varargs
+        // to the vararg save area
+        for (unsigned I = Idx; I < ArgRegs.size(); ++I, VaArgOffset += StackSlotSize) {
+            const Register Reg = RegInfo.createVirtualRegister(RC);
+
+            RegInfo.addLiveIn(ArgRegs[I], Reg);
+            SDValue ArgValue = DAG.getCopyFromReg(Chain, DL, Reg, MVT::i32);
+
+            FI = MFI.CreateFixedObject(StackSlotSize, VaArgOffset, true);
+            SDValue PtrOff = DAG.getFrameIndex(FI, getPointerTy(DAG.getDataLayout()));
+
+            SDValue Store = DAG.getStore(Chain, DL, ArgValue, PtrOff,
+                MachinePointerInfo::getFixedStack(MF, FI));
+
+            cast<StoreSDNode>(Store.getNode())->getMemOperand()->setValue((Value *) nullptr);
+            OutChains.push_back(Store);
+        }
+
+        UFI->setVarArgsSaveSize(VarArgsSaveSize);
+    }
+
+    // all stores are grouped in one node to allow the matching between the size of Ins and InVals
+    // this only happens for vararg functions
+    if (!OutChains.empty()) {
+        OutChains.push_back(Chain);
+        Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, OutChains);
+    }
+
+    return Chain;
 }
 
 //===----------------------------------------------------------------------===//

@@ -15,7 +15,9 @@ enum NodeType : unsigned {
 
     // start the numbering where the builtin ops and target ops leave off
     FIRST_NUMBER = ISD::BUILTIN_OP_END,
+
     RET,
+    CALL,
 };
 
 } // namespace ProgMinerLabISD
@@ -78,6 +80,11 @@ private:
         SelectionDAG & DAG
     ) const override;
 
+    SDValue LowerCall(
+        TargetLowering::CallLoweringInfo & CLI,
+        SmallVectorImpl<SDValue> & InVals
+    ) const override;
+
 /*
     void ReplaceNodeResults(
         SDNode * N,
@@ -86,11 +93,6 @@ private:
     ) const override;
 
     SDValue PerformDAGCombine(SDNode * N, DAGCombinerInfo & DCI) const override;
-
-    SDValue LowerCall(
-        TargetLowering::CallLoweringInfo & CLI,
-        SmallVectorImpl<SDValue> & InVals
-    ) const override;
 */
 };
 
