@@ -32,6 +32,7 @@
 #include "Targets/OSTargets.h"
 #include "Targets/PNaCl.h"
 #include "Targets/PPC.h"
+#include "Targets/ProgMinerLab.h"
 #include "Targets/RISCV.h"
 #include "Targets/SPIR.h"
 #include "Targets/Sparc.h"
@@ -414,6 +415,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
     default:
       return std::make_unique<PPC64TargetInfo>(Triple, Opts);
     }
+
+  case llvm::Triple::progminer_lab:
+    return std::make_unique<ProgMinerLabTargetInfo>(Triple, Opts);
 
   case llvm::Triple::nvptx:
     return std::make_unique<NVPTXTargetInfo>(Triple, Opts,

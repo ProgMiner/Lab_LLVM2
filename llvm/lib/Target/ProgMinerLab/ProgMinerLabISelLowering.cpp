@@ -2,6 +2,7 @@
 
 #include "llvm/CodeGen/CallingConvLower.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
+#include "llvm/IR/IntrinsicsProgMinerLab.h"
 
 #include "MCTargetDesc/ProgMinerLabMCTargetDesc.h"
 #include "ProgMinerLabMachineFunctionInfo.h"
@@ -42,6 +43,7 @@ ProgMinerLabTargetLowering::ProgMinerLabTargetLowering(
     setOperationAction(ISD::BR_CC, MVT::i32, Custom);
 
     setOperationAction(ISD::FRAMEADDR, MVT::i32, Legal);
+    // setOperationAction(ISD::INTRINSIC_VOID, MVT::i32, Custom); // ???
     // setOperationAction(ISD::FrameIndex, MVT::i32, Custom);
     // setOperationAction(ISD::GlobalAddress, MVT::i32, Custom);
 }
