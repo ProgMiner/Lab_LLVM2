@@ -17,6 +17,24 @@ using namespace llvm;
 
 ProgMinerLabInstrInfo::ProgMinerLabInstrInfo() : ProgMinerLabGenInstrInfo() {}
 
+void ProgMinerLabInstrInfo::copyPhysReg(
+    MachineBasicBlock & MBB,
+    MachineBasicBlock::iterator MBBI,
+    const DebugLoc & DL,
+    MCRegister DstReg,
+    MCRegister SrcReg,
+    bool KillSrc
+) const {
+    if (ProgMinerLab::GPRRegClass.contains(DstReg, SrcReg)) {
+        BuildMI(MBB, MBBI, DL, get(ProgMinerLab::MOV), DstReg)
+            .addReg(SrcReg, getKillRegState(KillSrc));
+
+        return;
+    }
+
+    llvm_unreachable("can't copyPhysReg");
+}
+
 void ProgMinerLabInstrInfo::storeRegToStackSlot(
     MachineBasicBlock & MBB,
     MachineBasicBlock::iterator I,

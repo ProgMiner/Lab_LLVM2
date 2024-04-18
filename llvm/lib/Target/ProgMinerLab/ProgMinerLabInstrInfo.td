@@ -29,14 +29,20 @@ def MOV : BinaryInst<0x10, (outs GPR:$reg1), (ins GPR:$reg2), "MOV $reg1, $reg2"
 
 let Constraints = "$res = $reg1" in {
 
-    def ADD : BinaryInst<0x11, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "ADD $reg1, $reg2", []>;
-    def SUB : BinaryInst<0x12, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "SUB $reg1, $reg2", []>;
-    def MUL : BinaryInst<0x13, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "MUL $reg1, $reg2", []>;
-    def DIV : BinaryInst<0x14, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "DIV $reg1, $reg2", []>;
-    def REM : BinaryInst<0x15, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "REM $reg1, $reg2", []>;
-    def AND : BinaryInst<0x16, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "AND $reg1, $reg2", []>;
-    def OR : BinaryInst<0x17, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "OR $reg1, $reg2", []>;
-    def XOR : BinaryInst<0x18, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "XOR $reg1, $reg2", []>;
+    class Arith<bits<8> op>
+        : BinaryInst<op, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), NAME#" $reg1, $reg2", []>;
+
+    def ADD : Arith<0x11>;
+    def SUB : Arith<0x12>;
+    def MUL : Arith<0x13>;
+    def DIV : Arith<0x14>;
+    def REM : Arith<0x15>;
+    def AND : Arith<0x16>;
+    def OR  : Arith<0x17>;
+    def XOR : Arith<0x18>;
+    def SHL : Arith<0x19>;
+    def SHR : Arith<0x1A>;
+    def ASR : Arith<0x1B>;
 
     // second digit corresponds to CondCode numeration
     def CMPeq : BinaryInst<0x21, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "CMPeq $reg1, $reg2", []>;
@@ -46,6 +52,18 @@ let Constraints = "$res = $reg1" in {
     def CMPle : BinaryInst<0x25, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "CMPle $reg1, $reg2", []>;
     def CMPne : BinaryInst<0x26, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "CMPne $reg1, $reg2", []>;
 }
+
+def : Pat<(add GPR:$reg1, GPR:$reg2), (ADD GPR:$reg1, GPR:$reg2)>;
+def : Pat<(sub GPR:$reg1, GPR:$reg2), (SUB GPR:$reg1, GPR:$reg2)>;
+def : Pat<(mul GPR:$reg1, GPR:$reg2), (MUL GPR:$reg1, GPR:$reg2)>;
+def : Pat<(sdiv GPR:$reg1, GPR:$reg2), (DIV GPR:$reg1, GPR:$reg2)>;
+def : Pat<(srem GPR:$reg1, GPR:$reg2), (REM GPR:$reg1, GPR:$reg2)>;
+def : Pat<(and GPR:$reg1, GPR:$reg2), (AND GPR:$reg1, GPR:$reg2)>;
+def : Pat<(or GPR:$reg1, GPR:$reg2), (OR GPR:$reg1, GPR:$reg2)>;
+def : Pat<(xor GPR:$reg1, GPR:$reg2), (XOR GPR:$reg1, GPR:$reg2)>;
+def : Pat<(shl GPR:$reg1, GPR:$reg2), (SHL GPR:$reg1, GPR:$reg2)>;
+def : Pat<(srl GPR:$reg1, GPR:$reg2), (SHR GPR:$reg1, GPR:$reg2)>;
+def : Pat<(sra GPR:$reg1, GPR:$reg2), (ASR GPR:$reg1, GPR:$reg2)>;
 
 // Memory operations
 

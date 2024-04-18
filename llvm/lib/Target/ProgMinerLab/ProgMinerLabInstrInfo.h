@@ -19,6 +19,15 @@ public:
 
     ProgMinerLabInstrInfo();
 
+    void copyPhysReg(
+        MachineBasicBlock & MBB,
+        MachineBasicBlock::iterator I,
+        const DebugLoc & DL,
+        MCRegister DestReg,
+        MCRegister SrcReg,
+        bool KillSrc
+    ) const override;
+
     void storeRegToStackSlot(
         MachineBasicBlock & MBB,
         MachineBasicBlock::iterator MI,
