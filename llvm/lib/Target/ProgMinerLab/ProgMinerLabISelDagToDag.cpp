@@ -61,8 +61,23 @@ public:
             return;
         }
 
+        const unsigned Opcode = Node->getOpcode();
         SDLoc DL(Node);
-        SelectCode(Node);
+
+        switch (Opcode) {
+        case ISD::FrameIndex: {
+            MVT VT = Node->getSimpleValueType(0);
+
+            const int FI = cast<FrameIndexSDNode>(Node)->getIndex();
+            SDValue TFI = CurDAG->getTargetFrameIndex(FI, VT);
+
+            ReplaceNode(Node, CurDAG->getMachineNode(ProgMinerLab::MOV, DL, VT, TFI));
+            return;
+        }
+
+        default:
+            SelectCode(Node);
+        }
     }
 
     StringRef getPassName() const override {

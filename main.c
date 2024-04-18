@@ -5,6 +5,7 @@
 #define GEN_IDX(__idx) ((__idx) / 32)
 #define GEN_SIZE(__s) GEN_IDX((__s) + 31)
 
+
 static inline int get_gen_value(const int * gen, int x, int y) {
     x = (x % SIM_X_SIZE + SIM_X_SIZE) % SIM_X_SIZE;
     y = (y % SIM_Y_SIZE + SIM_Y_SIZE) % SIM_Y_SIZE;

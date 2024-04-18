@@ -25,15 +25,17 @@ let isMoveImm = 1 in {
 
 // Arithmetic operations
 
+def MOV : BinaryInst<0x10, (outs GPR:$reg1), (ins GPR:$reg2), "MOV $reg1, $reg2", []>;
+
 let Constraints = "$res = $reg1" in {
 
-    def ADD : BinaryInst<0x10, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "ADD $reg1, $reg2", []>;
-    def SUB : BinaryInst<0x11, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "SUB $reg1, $reg2", []>;
-    def MUL : BinaryInst<0x12, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "MUL $reg1, $reg2", []>;
-    def DIV : BinaryInst<0x13, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "DIV $reg1, $reg2", []>;
-    def REM : BinaryInst<0x14, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "REM $reg1, $reg2", []>;
-    def AND : BinaryInst<0x15, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "AND $reg1, $reg2", []>;
-    def OR : BinaryInst<0x16, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "OR $reg1, $reg2", []>;
+    def ADD : BinaryInst<0x11, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "ADD $reg1, $reg2", []>;
+    def SUB : BinaryInst<0x12, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "SUB $reg1, $reg2", []>;
+    def MUL : BinaryInst<0x13, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "MUL $reg1, $reg2", []>;
+    def DIV : BinaryInst<0x14, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "DIV $reg1, $reg2", []>;
+    def REM : BinaryInst<0x15, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "REM $reg1, $reg2", []>;
+    def AND : BinaryInst<0x16, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "AND $reg1, $reg2", []>;
+    def OR : BinaryInst<0x17, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "OR $reg1, $reg2", []>;
 }
 
 // Memory operations
