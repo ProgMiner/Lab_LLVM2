@@ -1,8 +1,8 @@
 
-BUILTIN(simPixelOff, "vii", "nc")
-BUILTIN(simPixelOn, "vii", "nc")
-BUILTIN(simFlush, "v", "nc")
+BUILTIN(sim_pixel_off, "vii", "nc")
+BUILTIN(sim_pixel_on, "vii", "nc")
+BUILTIN(sim_flush, "v", "nc")
 
-BUILTIN(simRand, "i", "nc")
+BUILTIN(sim_rand, "i", "nc")
 
 #undef BUILTIN
