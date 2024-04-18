@@ -16,8 +16,10 @@ enum NodeType : unsigned {
     // start the numbering where the builtin ops and target ops leave off
     FIRST_NUMBER = ISD::BUILTIN_OP_END,
 
-    RET,
+    BR_CC,
+
     CALL,
+    RET,
 };
 
 } // namespace ProgMinerLabISD
@@ -32,6 +34,9 @@ public:
         const TargetMachine & TM,
         const ProgMinerLabSubtarget & STI
     );
+
+    // provide custom lowering hooks for some operations
+    SDValue LowerOperation(SDValue Op, SelectionDAG & DAG) const override;
 
     // this method returns the name of a target specific DAG node
     const char * getTargetNodeName(unsigned Opcode) const override;
@@ -84,6 +89,10 @@ private:
         TargetLowering::CallLoweringInfo & CLI,
         SmallVectorImpl<SDValue> & InVals
     ) const override;
+
+    bool mayBeEmittedAsTailCall(const CallInst * CI) const override {
+        return false;
+    }
 
 /*
     void ReplaceNodeResults(
