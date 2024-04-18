@@ -2,7 +2,7 @@
 //  ProgMinerLab instruction operands
 //===----------------------------------------------------------------------===//
 
-// Immediate operands with a shared generic render method.
+// immediate operands with a shared generic render method
 class ImmAsmOperand<string name> : AsmOperandClass {
 
     let Name = name;
@@ -33,3 +33,26 @@ def imm32 : Immediate<i32, [{ return isInt<32>(Imm); }], "Imm32AsmOperand"> {
     let EncoderMethod = "getImm32OpValue";
     let DecoderMethod = "decodeImm32Operand";
 }
+
+// jump target, 8-bit offset from instruction pointer
+def JumpTargetAsmOperand : AsmOperandClass {
+
+    let Name = "JumpTarget";
+    let ParserMethod = "parseJumpTarget";
+    let RenderMethod = "addImmOperands";
+    let PredicateMethod = "isJumpTarget";
+}
+
+def jumpTarget : Operand<OtherVT> {
+
+    let PrintMethod = "printJumpTargetAsmOperand";
+    let ParserMatchClass = JumpTargetAsmOperand;
+
+    let EncoderMethod = "getJumpTargetOpValue";
+    let DecoderMethod = "decodeJumpTargetOperand";
+
+    let OperandType = "OPERAND_PCREL";
+}
+
+// memory address for load and store
+def memAddr : ComplexPattern<iPTR, 1, "SelectMemAddr">;

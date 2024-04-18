@@ -4,6 +4,7 @@
 
 #include "ProgMinerLabInstrInfo.h"
 #include "ProgMinerLabSubtarget.h"
+#include "ProgMinerLabMachineFunctionInfo.h"
 
 
 namespace llvm {
@@ -40,6 +41,12 @@ public:
     TargetLoweringObjectFile * getObjFileLowering() const override {
         return TLOF.get();
     }
+
+    ProgMinerLabFunctionInfo * createMachineFunctionInfo(
+        BumpPtrAllocator & Allocator,
+        const Function & F,
+        const TargetSubtargetInfo * STI
+    ) const override;
 };
 
 } // end namespace llvm

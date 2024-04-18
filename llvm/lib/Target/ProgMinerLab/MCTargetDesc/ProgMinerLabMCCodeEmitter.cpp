@@ -23,6 +23,8 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/TargetParser/SubtargetFeature.h"
 
+#include "ProgMinerLabFixupKinds.h"
+
 
 using namespace llvm;
 
@@ -119,7 +121,7 @@ public:
             return CE->getValue();
         }
 
-        return 0;
+        llvm_unreachable("complex fixup");
     }
 
     unsigned getImm32OpValue(
@@ -142,6 +144,26 @@ public:
         if (const MCConstantExpr * CE = dyn_cast<MCConstantExpr>(Expr)) {
             return CE->getValue();
         }
+
+        llvm_unreachable("complex fixup");
+    }
+
+    unsigned getJumpTargetOpValue(
+        const MCInst & MI,
+        unsigned OpNo,
+        SmallVectorImpl<MCFixup> & Fixups,
+        const MCSubtargetInfo & STI
+    ) const {
+        const MCOperand & MO = MI.getOperand(OpNo);
+
+        if (MO.isImm()) {
+            return MO.getImm();
+        }
+
+        assert(MO.isExpr() && "not expression nor an immediate");
+
+        Fixups.push_back(MCFixup::create(0, MO.getExpr(),
+            MCFixupKind(ProgMinerLab::fixup_ProgMinerLab_IP8_1)));
 
         return 0;
     }

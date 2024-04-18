@@ -11,8 +11,6 @@ namespace llvm {
 /// ProgMinerLab target-specific information for each MachineFunction
 class ProgMinerLabFunctionInfo : public MachineFunctionInfo {
 
-    virtual void anchor();
-
     bool ReturnStackOffsetSet = false;
     unsigned ReturnStackOffset = -1U;
 
@@ -28,7 +26,7 @@ class ProgMinerLabFunctionInfo : public MachineFunctionInfo {
 public:
 
     ProgMinerLabFunctionInfo() {}
-    explicit ProgMinerLabFunctionInfo(MachineFunction & MF) {}
+    explicit ProgMinerLabFunctionInfo(const Function & F, const TargetSubtargetInfo * STI) {}
 
     ~ProgMinerLabFunctionInfo() {}
 

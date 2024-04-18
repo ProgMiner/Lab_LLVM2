@@ -44,7 +44,26 @@ public:
         return SelectionDAGISel::runOnMachineFunction(MF);
     }
 
-    void Select(SDNode * N) override;
+    bool SelectMemAddr(SDValue Addr, SDValue & Base) {
+        if (auto * FIN = dyn_cast<FrameIndexSDNode>(Addr)) {
+            Base = CurDAG->getTargetFrameIndex(FIN->getIndex(), MVT::i32);
+        } else {
+            Base = Addr;
+        }
+
+        return true;
+    }
+
+    void Select(SDNode * Node) override {
+        if (Node->isMachineOpcode()) {
+            LLVM_DEBUG(dbgs() << "== "; Node->dump(CurDAG); dbgs() << "\n");
+            Node->setNodeId(-1);
+            return;
+        }
+
+        SDLoc DL(Node);
+        SelectCode(Node);
+    }
 
     StringRef getPassName() const override {
         return "ProgMinerLab DAG->DAG Pattern Instruction Selection";
@@ -63,15 +82,4 @@ char ProgMinerLabDAGToDAGISel::ID = 0;
 // ready for instruction scheduling
 FunctionPass * llvm::createProgMinerLabISelDag(ProgMinerLabTargetMachine & TM) {
     return new ProgMinerLabDAGToDAGISel(TM);
-}
-
-void ProgMinerLabDAGToDAGISel::Select(SDNode * Node) {
-    if (Node->isMachineOpcode()) {
-        LLVM_DEBUG(dbgs() << "== "; Node->dump(CurDAG); dbgs() << "\n");
-        Node->setNodeId(-1);
-        return;
-    }
-
-    SDLoc DL(Node);
-    SelectCode(Node);
 }

@@ -77,7 +77,10 @@ public:
         return getTM<ProgMinerLabTargetMachine>();
     }
 
-    bool addInstSelector() override;
+    bool addInstSelector() override {
+        addPass(createProgMinerLabISelDag(getProgMinerLabTargetMachine()));
+        return false;
+    }
 };
 
 } // anonymous namespace
@@ -86,7 +89,10 @@ TargetPassConfig * ProgMinerLabTargetMachine::createPassConfig(PassManagerBase &
     return new ProgMinerLabPassConfig(*this, PM);
 }
 
-bool ProgMinerLabPassConfig::addInstSelector() {
-    addPass(createProgMinerLabISelDag(getProgMinerLabTargetMachine()));
-    return false;
+ProgMinerLabFunctionInfo * ProgMinerLabTargetMachine::createMachineFunctionInfo(
+    BumpPtrAllocator & Allocator,
+    const Function & F,
+    const TargetSubtargetInfo * STI
+) const {
+    return ProgMinerLabFunctionInfo::create<ProgMinerLabFunctionInfo>(Allocator, F, STI);
 }
