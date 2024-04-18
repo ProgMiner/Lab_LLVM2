@@ -36,4 +36,4 @@ def CC_ProgMinerLab : CallingConv<[
     CCIfType<[i32], CCAssignToStack<4, 4>>
 ]>;
 
-def CSR_ProgMinerLab : CalleeSavedRegs<(add R8, R9, R10, R11, R12, R13, SP, FP)>;
+def CSR_ProgMinerLab : CalleeSavedRegs<(add R8, R9, R10, R11, R12, SP, FP)>;

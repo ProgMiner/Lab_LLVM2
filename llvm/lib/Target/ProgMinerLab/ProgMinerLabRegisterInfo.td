@@ -8,10 +8,13 @@ class ProgMinerLabReg<bits<4> Enc, string name> : Register<name> {
 }
 
 // GPRs
-foreach i = 0-13 in {
+foreach i = 0-12 in {
 
     def R#i : ProgMinerLabReg<i, "r"#i>, DwarfRegNum<[i]>;
 }
+
+// temporary register for relative addressing
+def TMP : ProgMinerLabReg<13, "r13">, DwarfRegNum<[13]>;
 
 // stack pointer
 let AltNames = ["SP"] in
@@ -23,4 +26,4 @@ def FP : ProgMinerLabReg<15, "r15">, DwarfRegNum<[15]>;
 
 // Classes
 def GPR : RegisterClass<"ProgMinerLab", [i32], 32,
-    (add R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, SP, FP)>;
+    (add R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, TMP, SP, FP)>;

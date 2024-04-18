@@ -12,7 +12,7 @@
 #include "llvm/IR/Function.h"
 
 #include "MCTargetDesc/ProgMinerLabMCTargetDesc.h"
-// #include "ProgMinerLabMachineFunctionInfo.h"
+#include "ProgMinerLabMachineFunctionInfo.h"
 #include "ProgMinerLabSubtarget.h"
 
 
@@ -62,9 +62,6 @@ bool ProgMinerLabFrameLowering::spillCalleeSavedRegisters(
         return true;
     }
 
-    llvm_unreachable("spillCalleeSavedRegisters"); // TODO
-
-/*
     // TODO: seems ok
     MachineFunction * const MF = MBB.getParent();
     const TargetInstrInfo & TII = *MF->getSubtarget().getInstrInfo();
@@ -78,7 +75,6 @@ bool ProgMinerLabFrameLowering::spillCalleeSavedRegisters(
     }
 
     return true;
-*/
 }
 
 bool ProgMinerLabFrameLowering::restoreCalleeSavedRegisters(
@@ -91,9 +87,6 @@ bool ProgMinerLabFrameLowering::restoreCalleeSavedRegisters(
         return true;
     }
 
-    llvm_unreachable("restoreCalleeSavedRegisters"); // TODO
-
-/*
     // TODO: seems ok
     MachineFunction * const MF = MBB.getParent();
     const TargetInstrInfo & TII = *MF->getSubtarget().getInstrInfo();
@@ -110,7 +103,6 @@ bool ProgMinerLabFrameLowering::restoreCalleeSavedRegisters(
     }
 
     return true;
-*/
 }
 
 bool ProgMinerLabFrameLowering::hasFP(const MachineFunction & MF) const {
@@ -127,9 +119,8 @@ StackOffset ProgMinerLabFrameLowering::getFrameIndexReference(
     int FI,
     Register & FrameReg
 ) const {
-    llvm_unreachable("getFrameIndexReference"); // TODO: rewrite!
+    // TODO: rewrite!
 
-/*
     const MachineFrameInfo & MFI = MF.getFrameInfo();
     const TargetRegisterInfo * RI = MF.getSubtarget().getRegisterInfo();
     const auto * UFI = MF.getInfo<ProgMinerLabFunctionInfo>();
@@ -148,7 +139,7 @@ StackOffset ProgMinerLabFrameLowering::getFrameIndexReference(
     }
 
     if (FI >= MinCSFI && FI <= MaxCSFI) {
-        FrameReg = ProgMinerLab::R1;
+        FrameReg = ProgMinerLab::SP;
         Offset += MFI.getStackSize();
     } else if (RI->hasStackRealignment(MF) && !MFI.isFixedObjectIndex(FI)) {
         llvm_unreachable("getFrameIndexReference: realigned stack"); // TODO: realigned stack
@@ -164,7 +155,6 @@ StackOffset ProgMinerLabFrameLowering::getFrameIndexReference(
     }
 
     return StackOffset::getFixed(Offset);
-*/
 }
 
 // not preserve stack space within prologue for outgoing variables when the function contains

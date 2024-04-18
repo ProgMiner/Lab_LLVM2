@@ -47,6 +47,7 @@ BitVector ProgMinerLabRegisterInfo::getReservedRegs(const MachineFunction & MF) 
 
     BitVector Reserved(getNumRegs());
     Reserved.set(ProgMinerLab::SP);
+    Reserved.set(ProgMinerLab::TMP);
 
     if (TFI->hasFP(MF)) {
         Reserved.set(ProgMinerLab::FP);
@@ -62,32 +63,37 @@ bool ProgMinerLabRegisterInfo::eliminateFrameIndex(
     unsigned FIOperandNum,
     RegScavenger * RS
 ) const {
-    llvm_unreachable("eliminateFrameIndex"); // TODO
-
-/*
     assert(SPAdj == 0 && "Unexpected non-zero SPAdj value");
 
     MachineInstr & MI = *II;
-    MachineFunction & MF = *MI.getParent()->getParent();
+    MachineBasicBlock & MBB = *MI.getParent();
+    MachineFunction & MF = *MBB.getParent();
+    // MachineRegisterInfo & MRI = MF.getRegInfo();
+    const TargetInstrInfo & TII = *MF.getSubtarget().getInstrInfo();
     DebugLoc DL = MI.getDebugLoc();
 
     const int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
 
     Register FrameReg;
-    int Offset = getFrameLowering(MF)
-        ->getFrameIndexReference(MF, FrameIndex, FrameReg)
-        .getFixed();
+    int32_t Offset = getFrameLowering(MF)
+        ->getFrameIndexReference(MF, FrameIndex, FrameReg).getFixed();
 
-    Offset += MI.getOperand(FIOperandNum + 1).getImm();
+    // Offset += MI.getOperand(FIOperandNum + 1).getImm();
 
-    if (!isInt<16>(Offset)) {
-        llvm_unreachable("Offset must be 16-bit integer");
+    if (isInt<8>(Offset)) {
+        BuildMI(MBB, II, DL, TII.get(ProgMinerLab::CONSTs))
+            .addReg(ProgMinerLab::TMP, RegState::Define).addImm(Offset);
+    } else {
+        BuildMI(MBB, II, DL, TII.get(ProgMinerLab::CONSTl))
+            .addReg(ProgMinerLab::TMP, RegState::Define).addImm(Offset);
     }
 
-    MI.getOperand(FIOperandNum).ChangeToRegister(FrameReg, false, false, false);
-    MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Offset);
+    BuildMI(MBB, II, DL, TII.get(ProgMinerLab::ADD)).addReg(ProgMinerLab::TMP, RegState::Define)
+        .addReg(ProgMinerLab::TMP, RegState::Kill).addReg(FrameReg);
+
+    MI.getOperand(FIOperandNum).ChangeToRegister(ProgMinerLab::TMP, false, false, true);
+    // MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Offset);
     return false;
-*/
 }
 
 Register ProgMinerLabRegisterInfo::getFrameRegister(const MachineFunction & MF) const {
