@@ -18,7 +18,7 @@ void ProgMinerLabTargetInfo::getTargetDefines(
     const LangOptions & Opts,
     MacroBuilder & Builder
 ) const {
-    Builder.defineMacro("__progminer_lab__");
+    Builder.defineMacro("__progminerlab__");
 }
 
 ArrayRef<Builtin::Info> ProgMinerLabTargetInfo::getTargetBuiltins() const {

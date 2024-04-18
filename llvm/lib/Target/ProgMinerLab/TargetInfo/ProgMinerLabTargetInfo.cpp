@@ -12,10 +12,10 @@ Target & llvm::getTheProgMinerLabTarget() {
 }
 
 extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeProgMinerLabTargetInfo() {
-    RegisterTarget<Triple::progminer_lab> X(
+    RegisterTarget<Triple::progminerlab> X(
         getTheProgMinerLabTarget(),
-        "progminer_lab",
+        "progminerlab",
         "ProgMinerLab 32",
-        "PROGMINER_LAB"
+        "PROGMINERLAB"
     );
 }

@@ -1245,8 +1245,8 @@ StringRef ELFObjectFile<ELFT>::getFileFormatName() const {
       return "elf32-loongarch";
     case ELF::EM_XTENSA:
       return "elf32-xtensa";
-    case ELF::EM_PROGMINER_LAB:
-      return "elf32-progminer_lab";
+    case ELF::EM_PROGMINERLAB:
+      return "elf32-progminerlab";
     default:
       return "elf32-unknown";
     }
@@ -1338,8 +1338,8 @@ template <class ELFT> Triple::ArchType ELFObjectFile<ELFT>::getArch() const {
   case ELF::EM_SPARCV9:
     return Triple::sparcv9;
 
-  case ELF::EM_PROGMINER_LAB:
-    return Triple::progminer_lab;
+  case ELF::EM_PROGMINERLAB:
+    return Triple::progminerlab;
 
   case ELF::EM_AMDGPU: {
     if (!IsLittleEndian)

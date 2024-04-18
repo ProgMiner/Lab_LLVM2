@@ -1,9 +1,10 @@
 #pragma once
 
+#include "llvm/TargetParser/Triple.h"
+#include "llvm/Support/Compiler.h"
+
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Basic/TargetOptions.h"
-#include "llvm/Support/Compiler.h"
-#include "llvm/TargetParser/Triple.h"
 
 
 namespace clang {
@@ -21,11 +22,11 @@ public:
         LongLongAlign = 32;
         SuitableAlign = 32;
         DoubleAlign = LongDoubleAlign = 32;
-        SizeType = UnsignedInt;
+        SizeType = SignedInt;
         PtrDiffType = SignedInt;
         IntPtrType = SignedInt;
-        WCharType = UnsignedChar;
-        WIntType = UnsignedInt;
+        WCharType = SignedInt;
+        WIntType = SignedInt;
         resetDataLayout("e-m:e-p:32:32-i8:8:32-i16:16:32-i64:64-n32");
     }
 

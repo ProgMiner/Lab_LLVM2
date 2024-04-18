@@ -17,7 +17,7 @@ class ProgMinerLabELFObjectWriter : public MCELFObjectTargetWriter {
 public:
 
     ProgMinerLabELFObjectWriter(bool Is64Bit, uint8_t OSABI)
-        : MCELFObjectTargetWriter(Is64Bit, OSABI, ELF::EM_PROGMINER_LAB,
+        : MCELFObjectTargetWriter(Is64Bit, OSABI, ELF::EM_PROGMINERLAB,
             /* HasRelocationAddend = */ true) {}
 
     ~ProgMinerLabELFObjectWriter() override = default;

@@ -1,5 +1,8 @@
-BUILTIN(simPutPixel, "viii", "nc")
+
+BUILTIN(simPixelOff, "vii", "nc")
+BUILTIN(simPixelOn, "vii", "nc")
 BUILTIN(simFlush, "v", "nc")
+
 BUILTIN(simRand, "i", "nc")
 
 #undef BUILTIN

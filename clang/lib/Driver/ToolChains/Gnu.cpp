@@ -251,8 +251,8 @@ static const char *getLDMOption(const llvm::Triple &T, const ArgList &Args) {
     return "elf64ppc";
   case llvm::Triple::ppc64le:
     return "elf64lppc";
-  case llvm::Triple::progminer_lab:
-    return "elf32_progminer_lab";
+  case llvm::Triple::progminerlab:
+    return "elf32_progminerlab";
   case llvm::Triple::riscv32:
     return "elf32lriscv";
   case llvm::Triple::riscv64:

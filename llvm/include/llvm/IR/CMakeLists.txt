@@ -14,6 +14,7 @@ tablegen(LLVM IntrinsicsLoongArch.h -gen-intrinsic-enums -intrinsic-prefix=loong
 tablegen(LLVM IntrinsicsMips.h -gen-intrinsic-enums -intrinsic-prefix=mips)
 tablegen(LLVM IntrinsicsNVPTX.h -gen-intrinsic-enums -intrinsic-prefix=nvvm)
 tablegen(LLVM IntrinsicsPowerPC.h -gen-intrinsic-enums -intrinsic-prefix=ppc)
+tablegen(LLVM IntrinsicsProgMinerLab.h -gen-intrinsic-enums -intrinsic-prefix=progminerlab)
 tablegen(LLVM IntrinsicsR600.h -gen-intrinsic-enums -intrinsic-prefix=r600)
 tablegen(LLVM IntrinsicsRISCV.h -gen-intrinsic-enums -intrinsic-prefix=riscv)
 tablegen(LLVM IntrinsicsSPIRV.h -gen-intrinsic-enums -intrinsic-prefix=spv)
@@ -22,5 +23,4 @@ tablegen(LLVM IntrinsicsWebAssembly.h -gen-intrinsic-enums -intrinsic-prefix=was
 tablegen(LLVM IntrinsicsX86.h -gen-intrinsic-enums -intrinsic-prefix=x86)
 tablegen(LLVM IntrinsicsXCore.h -gen-intrinsic-enums -intrinsic-prefix=xcore)
 tablegen(LLVM IntrinsicsVE.h -gen-intrinsic-enums -intrinsic-prefix=ve)
-tablegen(LLVM IntrinsicsProgMinerLab.h -gen-intrinsic-enums -intrinsic-prefix=progminerlab)
 add_public_tablegen_target(intrinsics_gen)

@@ -416,7 +416,7 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
       return std::make_unique<PPC64TargetInfo>(Triple, Opts);
     }
 
-  case llvm::Triple::progminer_lab:
+  case llvm::Triple::progminerlab:
     return std::make_unique<ProgMinerLabTargetInfo>(Triple, Opts);
 
   case llvm::Triple::nvptx:

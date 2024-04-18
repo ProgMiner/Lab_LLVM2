@@ -32,8 +32,13 @@ let isMoveImm = true in {
 
 def NOP : SimpleInst<0x00, (outs), (ins), "NOP", []>;
 
-def FLUSH : SimpleInst<0x02, (outs), (ins), "FLUSH", []>;
+def PIXEL_OFF : BinaryInst<0x1E, (outs), (ins GPR:$reg1, GPR:$reg2), "PIXEL_OFF $reg1, $reg2",
+    [(int_progminerlab_pixeloff GPR:$reg1, GPR:$reg2)]>;
 
-def PIXEL_OFF : BinaryInst<0x1E, (outs), (ins GPR:$reg1, GPR:$reg2), "PIXEL_OFF $reg1, $reg2", []>;
+def PIXEL_ON : BinaryInst<0x1F, (outs), (ins GPR:$reg1, GPR:$reg2), "PIXEL_ON $reg1, $reg2",
+    [(int_progminerlab_pixelon GPR:$reg1, GPR:$reg2)]>;
 
-def PIXEL_ON : BinaryInst<0x1F, (outs), (ins GPR:$reg1, GPR:$reg2), "PIXEL_ON $reg1, $reg2", []>;
+def FLUSH : SimpleInst<0x02, (outs), (ins), "FLUSH", [(int_progminerlab_flush)]>;
+
+def RAND : UnaryInst<0x4, (outs GPR:$reg), (ins), "RAND $reg",
+    [(set GPR:$reg, (int_progminerlab_rand))]>;

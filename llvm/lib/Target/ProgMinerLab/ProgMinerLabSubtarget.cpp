@@ -6,7 +6,7 @@
 using namespace llvm;
 
 
-#define DEBUG_TYPE "progminer_lab-subtarget"
+#define DEBUG_TYPE "progminerlab-subtarget"
 
 #define GET_SUBTARGETINFO_CTOR
 #define GET_SUBTARGETINFO_TARGET_DESC

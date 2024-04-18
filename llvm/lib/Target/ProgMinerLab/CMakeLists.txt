@@ -26,14 +26,16 @@ add_llvm_target(ProgMinerLabCodeGen
     ProgMinerLabSubtarget.cpp
 
     LINK_COMPONENTS
+    Analysis
     AsmPrinter
     CodeGen
     Core
+    GlobalISel
     MC
+    ProgMinerLabInfo
     SelectionDAG
     Support
     Target
-    ProgMinerLabInfo
 
     ADD_TO_COMPONENT
     ProgMinerLab
