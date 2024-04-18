@@ -48,6 +48,9 @@ ProgMinerLabTargetLowering::ProgMinerLabTargetLowering(
     setOperationAction(ISD::UNDEF, MVT::i32, Legal);
 
     setOperationAction(ISD::BR_CC, MVT::i32, Legal);
+    setOperationAction(ISD::SETCC, MVT::i32, Legal);
+    setOperationAction(ISD::SELECT, MVT::i32, Legal);
+    setOperationAction(ISD::BRCOND, MVT::i32, Legal);
 
     setOperationAction(ISD::FRAMEADDR, MVT::i32, Legal);
     // setOperationAction(ISD::FrameIndex, MVT::i32, Custom);
@@ -675,7 +678,7 @@ SDValue ProgMinerLabTargetLowering::LowerOperation(SDValue Op, SelectionDAG & DA
     //     return lowerFRAMEADDR(Op, DAG);
 
     default:
-        Op.getNode()->dump();
+        Op.getNode()->dumpr();
         llvm_unreachable("unimplemented opcode");
     }
 }

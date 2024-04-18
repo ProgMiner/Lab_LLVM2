@@ -65,6 +65,11 @@ def : Pat<(shl GPR:$reg1, GPR:$reg2), (SHL GPR:$reg1, GPR:$reg2)>;
 def : Pat<(srl GPR:$reg1, GPR:$reg2), (SHR GPR:$reg1, GPR:$reg2)>;
 def : Pat<(sra GPR:$reg1, GPR:$reg2), (ASR GPR:$reg1, GPR:$reg2)>;
 
+// workaround (actually dirty hack) to compile select and select_cc
+//     select c, t, f = c * t + (1 - c) * f
+def : Pat<(select GPR:$c, GPR:$t, GPR:$f), (ADD (MUL GPR:$t, GPR:$c),
+    (MUL GPR:$f, (SUB 1, GPR:$c)))>;
+
 // Memory operations
 
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
@@ -92,12 +97,22 @@ let hasSideEffects = 0, mayLoad = 0, mayStore = 0, isBranch = 1, isTerminator = 
 
     // def JMPl : LargeConstInst<0x02, (outs), (ins imm32:$imm), "JMPl $imm", [(br bb:$imm)]>;
 
-    def IFZs : SmallConstRegInst<0x5, (outs), (ins GPR:$reg, jumpTarget:$imm), "IFZs $reg, $imm",
-        [(brcond GPR:$reg, bb:$imm)]>;
+    def IFZs : SmallConstRegInst<0x5, (outs), (ins GPR:$reg, jumpTarget:$imm), "IFZs $reg, $imm", []>;
 
-    // def IFZl : SmallConstRegInst<0x4, (outs), (ins GPR:$reg, jumpTarget:$imm), "IFZl $reg, $imm",
-    //     [(brcond GPR:$reg, bb:$imm)]>;
+    // def IFZl : SmallConstRegInst<0x4, (outs), (ins GPR:$reg, jumpTarget:$imm), "IFZl $reg, $imm", []>;
 }
+
+def : Pat<(brcond GPR:$reg, bb:$imm), (IFZs (CMPeq GPR:$reg, 0), jumpTarget:$imm)>;
+
+class PatCC<CondCode CC, ProgMinerLabInst CMP> : Pat<(setcc GPR:$reg1, GPR:$reg2, CC),
+    (CMP GPR:$reg1, GPR:$reg2)>;
+
+def : PatCC<SETEQ, CMPeq>;
+def : PatCC<SETGT, CMPgt>;
+def : PatCC<SETGE, CMPge>;
+def : PatCC<SETLT, CMPlt>;
+def : PatCC<SETLE, CMPle>;
+def : PatCC<SETNE, CMPne>;
 
 class PatBrCC<CondCode CC, ProgMinerLabInst CMP> : Pat<(brcc CC, GPR:$reg1, GPR:$reg2, bb:$imm),
     (IFZs (CMP GPR:$reg1, GPR:$reg2), jumpTarget:$imm)>;
