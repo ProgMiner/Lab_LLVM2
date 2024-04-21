@@ -166,7 +166,7 @@ def disasm(code, labels=dict(), pos=0):
                 mnemo = f'IFZs {reg(r)}, {read_offset()}'
 
             case [0x6, r]:
-                mnemo = f'RANG {reg(r)}'
+                mnemo = f'RAND {reg(r)}'
 
             case _:
                 mnemo = f'# UNKNOWN {hex(opcode)}'

@@ -107,6 +107,13 @@ public:
             return;
         }
 
+        if (
+            static_cast<int64_t>(Value) < -(1LL << (NumBytes * 8 - 1))
+            || static_cast<int64_t>(Value) >= 1LL << (NumBytes * 8 - 1)
+        ) {
+            llvm_unreachable("value is too large for fixup size");
+        }
+
         // for each byte of the fragment that the fixup touches,
         // mask in the bits from the fixup value
         //
