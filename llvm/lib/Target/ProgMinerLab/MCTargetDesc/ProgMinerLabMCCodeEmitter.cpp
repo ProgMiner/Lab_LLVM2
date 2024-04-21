@@ -163,7 +163,7 @@ public:
         assert(MO.isExpr() && "not expression nor an immediate");
 
         Fixups.push_back(MCFixup::create(0, MO.getExpr(),
-            MCFixupKind(ProgMinerLab::fixup_ProgMinerLab_IP8_1)));
+            MCFixupKind(ProgMinerLab::fixup_ProgMinerLab_IP32_1)));
 
         return 0;
     }

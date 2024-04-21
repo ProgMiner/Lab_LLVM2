@@ -54,7 +54,7 @@ def disasm(code, labels=dict(), pos=0):
         return f(x)
 
     def read_offset():
-        return read_small_const(lambda x: f'{x} -> 0x{pos + x:04X}')
+        return read_large_const(lambda x: f'{x} -> 0x{pos + x:04X}')
 
     def read_regs(f=lambda r1, r2: f'{r1}, {r2}'):
         nonlocal instr
@@ -79,7 +79,7 @@ def disasm(code, labels=dict(), pos=0):
                 mnemo = 'NOP'
 
             case [0x0, 0x1]:
-                mnemo = f'JMPs {read_offset()}'
+                mnemo = f'JMP {read_offset()}'
 
             case [0x0, 0x2]:
                 mnemo = 'FLUSH'
@@ -163,7 +163,7 @@ def disasm(code, labels=dict(), pos=0):
                 mnemo = f'CONSTl {reg(r)}, {read_large_const()}'
 
             case [0x5, r]:
-                mnemo = f'IFZs {reg(r)}, {read_offset()}'
+                mnemo = f'IFZ {reg(r)}, {read_offset()}'
 
             case [0x6, r]:
                 mnemo = f'RAND {reg(r)}'

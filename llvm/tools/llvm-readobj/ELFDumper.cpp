@@ -1709,6 +1709,10 @@ const EnumEntry<unsigned> ElfHeaderNVPTXFlags[] = {
     ENUM_ENT(EF_CUDA_SM89, "sm_89"), ENUM_ENT(EF_CUDA_SM90, "sm_90"),
 };
 
+static const EnumEntry<unsigned> ElfHeaderProgMinerLabFlags[] = {
+  LLVM_READOBJ_ENUM_ENT(ELF, EF_PROGMINERLAB_MACH_NONE),
+};
+
 const EnumEntry<unsigned> ElfHeaderRISCVFlags[] = {
   ENUM_ENT(EF_RISCV_RVC, "RVC"),
   ENUM_ENT(EF_RISCV_FLOAT_ABI_SINGLE, "single-float ABI"),
@@ -3645,6 +3649,8 @@ template <class ELFT> void GNUELFDumper<ELFT>::printFileHeaders() {
     ElfFlags = printFlags(
         e.e_flags, ArrayRef(ElfHeaderMipsFlags), unsigned(ELF::EF_MIPS_ARCH),
         unsigned(ELF::EF_MIPS_ABI), unsigned(ELF::EF_MIPS_MACH));
+  else if (e.e_machine == EM_PROGMINERLAB)
+    ElfFlags = printFlags(e.e_flags, ArrayRef(ElfHeaderProgMinerLabFlags));
   else if (e.e_machine == EM_RISCV)
     ElfFlags = printFlags(e.e_flags, ArrayRef(ElfHeaderRISCVFlags));
   else if (e.e_machine == EM_AVR)
@@ -6952,7 +6958,9 @@ template <class ELFT> void LLVMELFDumper<ELFT>::printFileHeaders() {
                      unsigned(ELF::EF_AMDGPU_FEATURE_SRAMECC_V4));
         break;
       }
-    } else if (E.e_machine == EM_RISCV)
+    } else if (E.e_machine == EM_PROGMINERLAB)
+      W.printFlags("Flags", E.e_flags, ArrayRef(ElfHeaderProgMinerLabFlags));
+    else if (E.e_machine == EM_RISCV)
       W.printFlags("Flags", E.e_flags, ArrayRef(ElfHeaderRISCVFlags));
     else if (E.e_machine == EM_AVR)
       W.printFlags("Flags", E.e_flags, ArrayRef(ElfHeaderAVRFlags),

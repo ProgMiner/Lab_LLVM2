@@ -38,7 +38,7 @@ public:
         const static MCFixupKindInfo InfosLE[ProgMinerLab::NumTargetFixupKinds] = {
             // name, offset, bits, flags
 
-            { "fixup_ProgMinerLab_IP8_1", 8, 8, MCFixupKindInfo::FKF_IsPCRel },
+            { "fixup_ProgMinerLab_IP32_1", 8, 32, MCFixupKindInfo::FKF_IsPCRel },
         };
 
         // fixup kinds from .reloc directive are like R_SPARC_NONE
@@ -98,8 +98,8 @@ public:
         unsigned NumBytes = 0;
 
         switch (static_cast<ProgMinerLab::Fixups>(Fixup.getKind())) {
-        case ProgMinerLab::fixup_ProgMinerLab_IP8_1:
-            NumBytes = 1;
+        case ProgMinerLab::fixup_ProgMinerLab_IP32_1:
+            NumBytes = 4;
             Offset += 1;
             break;
 

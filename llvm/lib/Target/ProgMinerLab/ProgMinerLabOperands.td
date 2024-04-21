@@ -43,26 +43,16 @@ def JumpTargetAsmOperand : AsmOperandClass {
     let PredicateMethod = "isJumpTarget";
 }
 
-def jumpTarget : Operand<OtherVT> {
+let PrintMethod = "printJumpTargetAsmOperand",
+    ParserMatchClass = JumpTargetAsmOperand,
+    EncoderMethod = "getJumpTargetOpValue",
+    DecoderMethod = "decodeJumpTargetOperand",
+    OperandType = "OPERAND_PCREL"
+in {
 
-    let PrintMethod = "printJumpTargetAsmOperand";
-    let ParserMatchClass = JumpTargetAsmOperand;
+    def jumpTarget : Operand<OtherVT>;
 
-    let EncoderMethod = "getJumpTargetOpValue";
-    let DecoderMethod = "decodeJumpTargetOperand";
-
-    let OperandType = "OPERAND_PCREL";
-}
-
-def callTarget : Operand<i32> {
-
-    let PrintMethod = "printJumpTargetAsmOperand";
-    let ParserMatchClass = JumpTargetAsmOperand;
-
-    let EncoderMethod = "getJumpTargetOpValue";
-    let DecoderMethod = "decodeJumpTargetOperand";
-
-    let OperandType = "OPERAND_PCREL";
+    def callTarget : Operand<i32>;
 }
 
 // memory address for load and store

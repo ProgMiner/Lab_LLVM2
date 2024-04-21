@@ -1001,6 +1001,19 @@ enum {
 #include "ELFRelocs/Xtensa.def"
 };
 
+// ProgMinerLab specific e_flags
+enum : unsigned {
+  // four-bit ProgMinerLab machine type mask
+  EF_PROGMINERLAB_MACH = 0x0000000f,
+  // Various CPU types
+  EF_PROGMINERLAB_MACH_NONE = 0x00000000,
+};
+
+// ELF Relocation types for ProgMinerLab
+enum {
+#include "ELFRelocs/ProgMinerLab.def"
+};
+
 #undef ELF_RELOC
 
 // Section header.

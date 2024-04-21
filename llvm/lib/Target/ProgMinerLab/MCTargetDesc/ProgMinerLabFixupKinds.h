@@ -13,7 +13,7 @@ namespace ProgMinerLab {
     // MCFixupKindInfo Infos[ProgMinerLab::NumTargetFixupKinds] in ProgMinerLabAsmBackend.cpp
     enum Fixups {
 
-        fixup_ProgMinerLab_IP8_1 = FirstTargetFixupKind,
+        fixup_ProgMinerLab_IP32_1 = FirstTargetFixupKind,
 
         LastTargetFixupKind,
         NumTargetFixupKinds = LastTargetFixupKind - FirstTargetFixupKind

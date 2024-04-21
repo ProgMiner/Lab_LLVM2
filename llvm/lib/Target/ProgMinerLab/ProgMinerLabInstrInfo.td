@@ -107,16 +107,12 @@ def : Pat<(store (i32 GPR:$reg1), memAddr:$reg2), (STORE memAddr:$reg2, GPR:$reg
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0, isBranch = 1, isTerminator = 1 in {
 
     let isBarrier = 1 in
-    def JMPs : SmallConstInst<0x01, (outs), (ins jumpTarget:$imm), "JMPs $imm", [(br bb:$imm)]>;
+    def JMP : LargeConstInst<0x01, (outs), (ins jumpTarget:$imm), "JMP $imm", [(br bb:$imm)]>;
 
-    // def JMPl : LargeConstInst<0x02, (outs), (ins imm32:$imm), "JMPl $imm", [(br bb:$imm)]>;
-
-    def IFZs : SmallConstRegInst<0x5, (outs), (ins GPR:$reg, jumpTarget:$imm), "IFZs $reg, $imm", []>;
-
-    // def IFZl : SmallConstRegInst<0x4, (outs), (ins GPR:$reg, jumpTarget:$imm), "IFZl $reg, $imm", []>;
+    def IFZ : LargeConstRegInst<0x5, (outs), (ins GPR:$reg, jumpTarget:$imm), "IFZ $reg, $imm", []>;
 }
 
-def : Pat<(brcond GPR:$reg, bb:$imm), (IFZs (CMPeq GPR:$reg, 0), jumpTarget:$imm)>;
+def : Pat<(brcond GPR:$reg, bb:$imm), (IFZ (CMPeq GPR:$reg, 0), jumpTarget:$imm)>;
 
 class PatCC<CondCode CC, ProgMinerLabInst CMP> : Pat<(setcc GPR:$reg1, GPR:$reg2, CC),
     (CMP GPR:$reg1, GPR:$reg2)>;
@@ -129,7 +125,7 @@ def : PatCC<SETLE, CMPle>;
 def : PatCC<SETNE, CMPne>;
 
 class PatBrCC<CondCode CC, ProgMinerLabInst CMP> : Pat<(brcc CC, GPR:$reg1, GPR:$reg2, bb:$imm),
-    (IFZs (CMP GPR:$reg1, GPR:$reg2), jumpTarget:$imm)>;
+    (IFZ (CMP GPR:$reg1, GPR:$reg2), jumpTarget:$imm)>;
 
 // inversed comparison due to IFZ
 def : PatBrCC<SETEQ, CMPne>;
@@ -139,12 +135,12 @@ def : PatBrCC<SETLT, CMPge>;
 def : PatBrCC<SETLE, CMPgt>;
 def : PatBrCC<SETNE, CMPeq>;
 
+let isCall = 1 in
+def CALL : LargeConstInst<0x03, (outs), (ins callTarget:$imm), "CALL $imm",
+    [(progminerlab_call tglobaladdr:$imm)]>;
+
 let isBarrier = 1, isReturn = 1, isTerminator = 1 in
 def RET : SimpleInst<0x04, (outs), (ins), "RET", [(progminerlab_ret)]>;
-
-let isCall = 1 in
-def CALL : SmallConstInst<0x03, (outs), (ins callTarget:$imm), "CALL $imm",
-    [(progminerlab_call tglobaladdr:$imm)]>;
 
 // Misc
 
