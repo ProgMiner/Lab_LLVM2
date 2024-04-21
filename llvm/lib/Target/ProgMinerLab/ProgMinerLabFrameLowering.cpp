@@ -31,7 +31,6 @@ void ProgMinerLabFrameLowering::determineCalleeSaves(
 
     // unconditionally spill FP if the function uses a frame pointer
     if (hasFP(MF)) {
-        // SavedRegs.set(ProgMinerLab::R0);
         SavedRegs.set(ProgMinerLab::FP);
     }
 }
@@ -45,11 +44,115 @@ void ProgMinerLabFrameLowering::adjustStackToMatchRecords(
 }
 
 void ProgMinerLabFrameLowering::emitPrologue(MachineFunction & MF, MachineBasicBlock & MBB) const {
-    return; // TODO: seems ok
+    MachineFrameInfo & MFI = MF.getFrameInfo();
+
+    auto * FI = MF.getInfo<ProgMinerLabFunctionInfo>();
+    const ProgMinerLabRegisterInfo * RI = STI.getRegisterInfo();
+    MachineBasicBlock::iterator MBBI = MBB.begin();
+
+    Register FPReg = ProgMinerLab::FP;
+    Register SPReg = ProgMinerLab::SP;
+
+    // debug location must be unknown since the first debug location is used
+    // to determine the end of the prologue
+    DebugLoc DL;
+
+    uint64_t StackSize = alignTo(MFI.getStackSize(), getStackAlign());
+    MFI.setStackSize(StackSize);
+
+    if (!isInt<32>(StackSize)) {
+        llvm_unreachable("stack offs won't fit");
+    }
+
+    // early exit if there is no need to allocate on the stack
+    if (StackSize == 0 && !MFI.adjustsStack()) {
+        return;
+    }
+
+    // allocate space on the stack if necessary
+    adjustReg(MBB, MBBI, DL, SPReg, SPReg, -StackSize, MachineInstr::FrameSetup);
+
+    const auto & CSI = MFI.getCalleeSavedInfo();
+
+    // the frame pointer is callee-saved, and code has been generated for us
+    // to save it to the stack
+    // we need to skip over the storing of callee-saved registers as the frame pointer
+    // must be modified after it has been saved to the stack, not before
+    // FIXME: assumes exactly one instruction is used to save each callee-saved register
+    std::advance(MBBI, CSI.size());
+
+    if (!hasFP(MF)) {
+        return;
+    }
+
+    // generate new FP
+    adjustReg(MBB, MBBI, DL, FPReg, SPReg, StackSize - FI->getVarArgsSaveSize(),
+        MachineInstr::FrameSetup);
+
+    if (RI->hasStackRealignment(MF)) {
+        llvm_unreachable("realigned stack"); // TODO
+    }
 }
 
 void ProgMinerLabFrameLowering::emitEpilogue(MachineFunction & MF, MachineBasicBlock & MBB) const {
-    return; // TODO: seems ok
+    const ProgMinerLabRegisterInfo * RI = STI.getRegisterInfo();
+    MachineFrameInfo & MFI = MF.getFrameInfo();
+
+    // auto * UFI = MF.getInfo<ProgMinerLabFunctionInfo>();
+    // Register FPReg = ProgMinerLab::FP;
+    Register SPReg = ProgMinerLab::SP;
+
+    // get the insert location for the epilogue
+    // if there were no terminators in the block, get the last instruction
+    MachineBasicBlock::iterator MBBI = MBB.end();
+    DebugLoc DL;
+
+    if (!MBB.empty()) {
+        MBBI = MBB.getFirstTerminator();
+
+        if (MBBI == MBB.end()) {
+            MBBI = MBB.getLastNonDebugInstr();
+        }
+
+        DL = MBBI->getDebugLoc();
+
+        // if this is not a terminator, the actual insert location
+        // should be after the last instruction
+        if (!MBBI->isTerminator()) {
+            MBBI = std::next(MBBI);
+        }
+
+        // TODO: is it necessary?
+        while (MBBI != MBB.begin() && std::prev(MBBI)->getFlag(MachineInstr::FrameDestroy)) {
+            --MBBI;
+        }
+    }
+
+    const auto & CSI = MFI.getCalleeSavedInfo();
+
+    // skip to before the restores of callee-saved registers
+    // FIXME: assumes exactly one instruction is used to restore each callee-saved register
+
+    auto LastFrameDestroy = MBBI;
+
+    if (!CSI.empty()) {
+        LastFrameDestroy = std::prev(MBBI, CSI.size());
+    }
+
+    const uint64_t StackSize = MFI.getStackSize();
+    // const uint64_t FPOffset = StackSize - UFI->getVarArgsSaveSize();
+
+    // restore the stack pointer using the value of the frame pointer
+    // only necessary if the stack pointer was modified, meaning the stack size is unknown
+    if (RI->hasStackRealignment(MF) || MFI.hasVarSizedObjects()) {
+        llvm_unreachable("");
+
+        // assert(hasFP(MF) && "frame pointer should not have been eliminated");
+        // adjustReg(MBB, LastFrameDestroy, DL, SPReg, FPReg, -FPOffset, MachineInstr::FrameDestroy);
+    }
+
+    // deallocate stack
+    adjustReg(MBB, MBBI, DL, SPReg, SPReg, StackSize, MachineInstr::FrameDestroy);
 }
 
 bool ProgMinerLabFrameLowering::spillCalleeSavedRegisters(
@@ -112,6 +215,34 @@ bool ProgMinerLabFrameLowering::hasFP(const MachineFunction & MF) const {
     return MF.getTarget().Options.DisableFramePointerElim(MF) // -fomit-frame-pointer
         || RegInfo->hasStackRealignment(MF) || MFI.hasVarSizedObjects()
         || MFI.isFrameAddressTaken();
+}
+
+// TODO: seems ok
+void ProgMinerLabFrameLowering::processFunctionBeforeFrameFinalized(
+    MachineFunction & MF,
+    RegScavenger * RS
+) const {
+    MachineFrameInfo & MFI = MF.getFrameInfo();
+    auto * UFI = MF.getInfo<ProgMinerLabFunctionInfo>();
+    // return;
+
+    if (MFI.getCalleeSavedInfo().empty()) {
+        UFI->setCalleeSavedStackSize(0);
+        return;
+    }
+
+    unsigned Size = 0;
+    for (const auto & Info : MFI.getCalleeSavedInfo()) {
+        const int FrameIdx = Info.getFrameIdx();
+
+        if (MFI.getStackID(FrameIdx) != TargetStackID::Default) {
+            continue;
+        }
+
+        Size += MFI.getObjectSize(FrameIdx);
+    }
+
+    UFI->setCalleeSavedStackSize(Size);
 }
 
 // eliminate ADJCALLSTACKDOWN, ADJCALLSTACKUP pseudo instructions
@@ -210,25 +341,25 @@ void ProgMinerLabFrameLowering::adjustReg(
         return;
     }
 
-    MachineRegisterInfo & MRI = MBB.getParent()->getRegInfo();
     const ProgMinerLabInstrInfo & TII = *STI.getInstrInfo();
 
     if (DestReg == SrcReg) {
-        // CONST %tmp, Val
-        // ADD $dst, %tmp
+        // CONST $tmp, Val
+        // ADD $dst, $tmp
 
-        Register tmp = MRI.createVirtualRegister(&ProgMinerLab::GPRRegClass);
+        // TODO: can we really use $tmp here?
 
         if (isInt<8>(Val)) {
             BuildMI(MBB, MBBI, DL, TII.get(ProgMinerLab::CONSTs))
-                .addReg(tmp, RegState::Define).addImm(Val).setMIFlag(Flag);
+                .addReg(ProgMinerLab::TMP, RegState::Define).addImm(Val).setMIFlag(Flag);
         } else {
             BuildMI(MBB, MBBI, DL, TII.get(ProgMinerLab::CONSTl))
-                .addReg(tmp, RegState::Define).addImm(Val).setMIFlag(Flag);
+                .addReg(ProgMinerLab::TMP, RegState::Define).addImm(Val).setMIFlag(Flag);
         }
 
         BuildMI(MBB, MBBI, DL, TII.get(ProgMinerLab::ADD)).addReg(DestReg, RegState::Define)
-            .addReg(DestReg, RegState::Kill).addReg(tmp, RegState::Kill).setMIFlag(Flag);
+            .addReg(DestReg, RegState::Kill).addReg(ProgMinerLab::TMP, RegState::Kill)
+            .setMIFlag(Flag);
     } else {
         // CONST %dst, Val
         // ADD %dst, %src

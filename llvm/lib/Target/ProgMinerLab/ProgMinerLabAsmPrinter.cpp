@@ -141,6 +141,20 @@ public:
         }
     }
 
+    bool runOnMachineFunction(MachineFunction & MF) override {
+        // set the current MCSubtargetInfo to a copy which has the correct feature bits
+        // for the current MachineFunction
+        MCSubtargetInfo & NewSTI = OutStreamer->getContext()
+            .getSubtargetCopy(*TM.getMCSubtargetInfo());
+
+        NewSTI.setFeatureBits(MF.getSubtarget().getFeatureBits());
+        STI = &NewSTI;
+
+        SetupMachineFunction(MF);
+        emitFunctionBody();
+        return false;
+    }
+
     // Used in pseudo lowerings
     bool lowerOperand(const MachineOperand & MO, MCOperand & MCOp) const {
         return lowerProgMinerLabMachineOperandToMCOperand(MO, MCOp, *this);
