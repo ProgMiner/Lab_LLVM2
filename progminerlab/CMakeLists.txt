@@ -36,9 +36,17 @@ target_link_libraries(orig PRIVATE sfml-graphics)
 target_compile_features(orig PRIVATE c_std_11)
 target_compile_features(orig PRIVATE cxx_std_17)
 
+# disassembler
+
+add_executable(disasm src/disasm.cpp src/loader.h)
+
+target_link_libraries(disasm PRIVATE elfio)
+
+target_compile_features(disasm PRIVATE cxx_std_17)
+
 # ELF-runner
 
-add_executable(runner src/runner.cpp src/sim.cpp src/sim.hpp)
+add_executable(runner src/runner.cpp src/loader.h src/sim.hpp)
 
 target_link_libraries(runner PRIVATE sfml-graphics)
 target_link_libraries(runner PRIVATE elfio)
