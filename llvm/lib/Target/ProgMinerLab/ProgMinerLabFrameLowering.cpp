@@ -114,6 +114,39 @@ bool ProgMinerLabFrameLowering::hasFP(const MachineFunction & MF) const {
         || MFI.isFrameAddressTaken();
 }
 
+// eliminate ADJCALLSTACKDOWN, ADJCALLSTACKUP pseudo instructions
+// TODO: seems ok
+MachineBasicBlock::iterator ProgMinerLabFrameLowering::eliminateCallFramePseudoInstr(
+    MachineFunction & MF,
+    MachineBasicBlock & MBB,
+    MachineBasicBlock::iterator MI
+) const {
+    Register SPReg = ProgMinerLab::SP;
+    DebugLoc DL = MI->getDebugLoc();
+
+    if (!hasReservedCallFrame(MF)) {
+        // if space has not been reserved for a call frame, ADJCALLSTACKDOWN and ADJCALLSTACKUP
+        // must be converted to instructions manipulating the stack pointer
+        // this is necessary when there is a variable length stack allocation (e.g. alloca),
+        // which means it's not possible to allocate space for outgoing arguments
+        // from within the function prologue
+        int64_t Amount = MI->getOperand(0).getImm();
+
+        if (Amount != 0) {
+            // ensure the stack remains aligned after adjustment
+            Amount = alignSPAdjust(Amount);
+
+            if (MI->getOpcode() == ProgMinerLab::ADJCALLSTACKDOWN) {
+                Amount = -Amount;
+            }
+
+            adjustReg(MBB, MI, DL, SPReg, SPReg, Amount, MachineInstr::NoFlags);
+        }
+    }
+
+    return MBB.erase(MI);
+}
+
 StackOffset ProgMinerLabFrameLowering::getFrameIndexReference(
     const MachineFunction & MF,
     int FI,
@@ -162,4 +195,53 @@ StackOffset ProgMinerLabFrameLowering::getFrameIndexReference(
 // let eliminateCallFramePseudoInstr preserve stack space for it
 bool ProgMinerLabFrameLowering::hasReservedCallFrame(const MachineFunction & MF) const {
     return !MF.getFrameInfo().hasVarSizedObjects();
+}
+
+void ProgMinerLabFrameLowering::adjustReg(
+    MachineBasicBlock & MBB,
+    MachineBasicBlock::iterator MBBI,
+    const DebugLoc & DL,
+    Register DestReg,
+    Register SrcReg,
+    int64_t Val,
+    MachineInstr::MIFlag Flag
+) const {
+    if (DestReg == SrcReg && Val == 0) {
+        return;
+    }
+
+    MachineRegisterInfo & MRI = MBB.getParent()->getRegInfo();
+    const ProgMinerLabInstrInfo & TII = *STI.getInstrInfo();
+
+    if (DestReg == SrcReg) {
+        // CONST %tmp, Val
+        // ADD $dst, %tmp
+
+        Register tmp = MRI.createVirtualRegister(&ProgMinerLab::GPRRegClass);
+
+        if (isInt<8>(Val)) {
+            BuildMI(MBB, MBBI, DL, TII.get(ProgMinerLab::CONSTs))
+                .addReg(tmp, RegState::Define).addImm(Val).setMIFlag(Flag);
+        } else {
+            BuildMI(MBB, MBBI, DL, TII.get(ProgMinerLab::CONSTl))
+                .addReg(tmp, RegState::Define).addImm(Val).setMIFlag(Flag);
+        }
+
+        BuildMI(MBB, MBBI, DL, TII.get(ProgMinerLab::ADD)).addReg(DestReg, RegState::Define)
+            .addReg(DestReg, RegState::Kill).addReg(tmp, RegState::Kill).setMIFlag(Flag);
+    } else {
+        // CONST %dst, Val
+        // ADD %dst, %src
+
+        if (isInt<8>(Val)) {
+            BuildMI(MBB, MBBI, DL, TII.get(ProgMinerLab::CONSTs))
+                .addReg(DestReg, RegState::Define).addImm(Val).setMIFlag(Flag);
+        } else {
+            BuildMI(MBB, MBBI, DL, TII.get(ProgMinerLab::CONSTl))
+                .addReg(DestReg, RegState::Define).addImm(Val).setMIFlag(Flag);
+        }
+
+        BuildMI(MBB, MBBI, DL, TII.get(ProgMinerLab::ADD)).addReg(DestReg, RegState::Define)
+            .addReg(DestReg, RegState::Kill).addReg(SrcReg).setMIFlag(Flag);
+    }
 }

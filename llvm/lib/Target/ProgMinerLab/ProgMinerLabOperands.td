@@ -54,5 +54,16 @@ def jumpTarget : Operand<OtherVT> {
     let OperandType = "OPERAND_PCREL";
 }
 
+def callTarget : Operand<i32> {
+
+    let PrintMethod = "printJumpTargetAsmOperand";
+    let ParserMatchClass = JumpTargetAsmOperand;
+
+    let EncoderMethod = "getJumpTargetOpValue";
+    let DecoderMethod = "decodeJumpTargetOperand";
+
+    let OperandType = "OPERAND_PCREL";
+}
+
 // memory address for load and store
 def memAddr : ComplexPattern<iPTR, 1, "SelectMemAddr">;

@@ -2,8 +2,22 @@
 //  ProgMinerLab profiles and nodes
 //===----------------------------------------------------------------------===//
 
+def SDT_ProgMinerLabCall : SDTypeProfile<0, -1, [SDTCisVT<0, i32>]>;
+def SDT_ProgMinerLabCallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
+def SDT_ProgMinerLabCallSeqEnd : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
+
+def progminerlab_call : SDNode<"ProgMinerLabISD::CALL", SDT_ProgMinerLabCall,
+    [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue, SDNPVariadic]>;
+
 def progminerlab_ret : SDNode<"ProgMinerLabISD::RET", SDTNone,
     [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+
+// these are target-independent nodes, but have target-specific formats
+def callseq_start : SDNode<"ISD::CALLSEQ_START", SDT_ProgMinerLabCallSeqStart,
+    [SDNPHasChain, SDNPOutGlue]>;
+
+def callseq_end : SDNode<"ISD::CALLSEQ_END", SDT_ProgMinerLabCallSeqEnd,
+    [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue]>;
 
 //===----------------------------------------------------------------------===//
 //  ProgMinerLab instructions
@@ -125,8 +139,12 @@ def : PatBrCC<SETLT, CMPge>;
 def : PatBrCC<SETLE, CMPgt>;
 def : PatBrCC<SETNE, CMPeq>;
 
-let isBarrier = 1, isReturn = 1, isTerminator = 1, Uses = [SP] in
-def RET : SimpleInst<0x03, (outs), (ins), "RET", [(progminerlab_ret)]>;
+let isBarrier = 1, isReturn = 1, isTerminator = 1 in
+def RET : SimpleInst<0x04, (outs), (ins), "RET", [(progminerlab_ret)]>;
+
+let isCall = 1 in
+def CALL : SmallConstInst<0x03, (outs), (ins callTarget:$imm), "CALL $imm",
+    [(progminerlab_call tglobaladdr:$imm)]>;
 
 // Misc
 
@@ -142,3 +160,11 @@ def FLUSH : SimpleInst<0x02, (outs), (ins), "FLUSH", [(int_progminerlab_flush)]>
 
 def RAND : UnaryInst<0x6, (outs GPR:$reg), (ins), "RAND $reg",
     [(set GPR:$reg, (int_progminerlab_rand))]>;
+
+// Pseudo instructions
+
+def ADJCALLSTACKDOWN : ProgMinerLabPseudoInst<(outs), (ins i32imm:$amt, i32imm:$amt2),
+    "# ADJCALLSTACKDOWN $amt, $amt2", [(callseq_start timm:$amt, timm:$amt2)]>;
+
+def ADJCALLSTACKUP : ProgMinerLabPseudoInst<(outs), (ins i32imm:$amt1, i32imm:$amt2),
+    "# ADJCALLSTACKUP $amt1", [(callseq_end timm:$amt1, timm:$amt2)]>;

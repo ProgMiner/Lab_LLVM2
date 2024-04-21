@@ -26,7 +26,7 @@ protected:
 
     unsigned getRelocType(
         MCContext & Ctx,
-        const MCValue &Target,
+        const MCValue & Target,
         const MCFixup & Fixup,
         bool IsPCRel
     ) const override {

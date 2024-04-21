@@ -44,6 +44,12 @@ public:
     // has variable sized allocas or if frame pointer elimination is disabled
     bool hasFP(const MachineFunction & MF) const override;
 
+    MachineBasicBlock::iterator eliminateCallFramePseudoInstr(
+        MachineFunction & MF,
+        MachineBasicBlock & MBB,
+        MachineBasicBlock::iterator I
+    ) const override;
+
     StackOffset getFrameIndexReference(
         const MachineFunction & MF,
         int FI,
@@ -58,6 +64,16 @@ private:
         MachineBasicBlock & MBB,
         MachineBasicBlock::iterator MI,
         bool Allocate
+    ) const;
+
+    void adjustReg(
+        MachineBasicBlock & MBB,
+        MachineBasicBlock::iterator MBBI,
+        const DebugLoc & DL,
+        Register DestReg,
+        Register SrcReg,
+        int64_t Val,
+        MachineInstr::MIFlag Flag
     ) const;
 };
 

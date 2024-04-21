@@ -97,7 +97,7 @@ public:
         unsigned Offset = Fixup.getOffset();
         unsigned NumBytes = 0;
 
-        switch (Fixup.getKind()) {
+        switch (static_cast<ProgMinerLab::Fixups>(Fixup.getKind())) {
         case ProgMinerLab::fixup_ProgMinerLab_IP8_1:
             NumBytes = 1;
             Offset += 1;

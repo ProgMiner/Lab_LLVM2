@@ -144,6 +144,6 @@ class LargeConstRegInst<bits<4> op, dag outs, dag ins, string asmstr, list<dag> 
 class ProgMinerLabPseudoInst<dag outs, dag ins, string asmstr, list<dag> pattern>
    : ProgMinerLabInst<1, outs, ins, asmstr, pattern> {
 
-  let isPseudo = 1;
-  let isCodeGenOnly = 1;
+    let isPseudo = 1;
+    let isCodeGenOnly = 1;
 }

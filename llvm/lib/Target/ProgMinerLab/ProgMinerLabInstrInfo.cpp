@@ -15,7 +15,9 @@ using namespace llvm;
 #include "ProgMinerLabGenInstrInfo.inc"
 
 
-ProgMinerLabInstrInfo::ProgMinerLabInstrInfo() : ProgMinerLabGenInstrInfo() {}
+ProgMinerLabInstrInfo::ProgMinerLabInstrInfo()
+    : ProgMinerLabGenInstrInfo(ProgMinerLab::ADJCALLSTACKDOWN, ProgMinerLab::ADJCALLSTACKUP)
+    {}
 
 void ProgMinerLabInstrInfo::copyPhysReg(
     MachineBasicBlock & MBB,
