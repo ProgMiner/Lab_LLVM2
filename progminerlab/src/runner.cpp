@@ -50,6 +50,13 @@ struct run_context {
     }
 
     void store(uint32_t addr, uint32_t value) {
+        // const uint32_t old = load(addr);
+
+        // if (old != value) {
+        //     std::cout << "mem " << reinterpret_cast<void *>(addr)
+        //               << " : " << old << " -> " << value << std::endl;
+        // }
+
         for (std::size_t i = 0; i < 4; ++i) {
             get_mem(addr + i) = value & 0xFF;
             value >>= 8;
