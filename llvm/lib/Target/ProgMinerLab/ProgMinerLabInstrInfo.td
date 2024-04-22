@@ -82,7 +82,7 @@ def : Pat<(sra GPR:$reg1, GPR:$reg2), (ASR GPR:$reg1, GPR:$reg2)>;
 // workaround (actually dirty hack) to compile select and select_cc
 //     select c, t, f = c * t + (1 - c) * f
 def : Pat<(select GPR:$c, GPR:$t, GPR:$f), (ADD (MUL GPR:$t, GPR:$c),
-    (MUL GPR:$f, (SUB 1, GPR:$c)))>;
+    (MUL GPR:$f, (SUB (CONSTs 1), GPR:$c)))>;
 
 // Memory operations
 
