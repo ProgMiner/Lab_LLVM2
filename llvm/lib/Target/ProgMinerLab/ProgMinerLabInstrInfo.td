@@ -79,11 +79,6 @@ def : Pat<(shl GPR:$reg1, GPR:$reg2), (SHL GPR:$reg1, GPR:$reg2)>;
 def : Pat<(srl GPR:$reg1, GPR:$reg2), (SHR GPR:$reg1, GPR:$reg2)>;
 def : Pat<(sra GPR:$reg1, GPR:$reg2), (ASR GPR:$reg1, GPR:$reg2)>;
 
-// workaround (actually dirty hack) to compile select and select_cc
-//     select c, t, f = c * t + (1 - c) * f
-def : Pat<(select GPR:$c, GPR:$t, GPR:$f), (ADD (MUL GPR:$t, GPR:$c),
-    (MUL GPR:$f, (SUB (CONSTs 1), GPR:$c)))>;
-
 // Memory operations
 
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
@@ -124,6 +119,13 @@ def : PatCC<SETLT, CMPlt>;
 def : PatCC<SETLE, CMPle>;
 def : PatCC<SETNE, CMPne>;
 
+def : PatCC<SETUEQ, CMPeq>;
+def : PatCC<SETUGT, CMPgt>;
+def : PatCC<SETUGE, CMPge>;
+def : PatCC<SETULT, CMPlt>;
+def : PatCC<SETULE, CMPle>;
+def : PatCC<SETUNE, CMPne>;
+
 class PatBrCC<CondCode CC, ProgMinerLabInst CMP> : Pat<(brcc CC, GPR:$reg1, GPR:$reg2, bb:$imm),
     (IFZ (CMP GPR:$reg1, GPR:$reg2), jumpTarget:$imm)>;
 
@@ -134,6 +136,13 @@ def : PatBrCC<SETGE, CMPlt>;
 def : PatBrCC<SETLT, CMPge>;
 def : PatBrCC<SETLE, CMPgt>;
 def : PatBrCC<SETNE, CMPeq>;
+
+def : PatBrCC<SETUEQ, CMPne>;
+def : PatBrCC<SETUGT, CMPle>;
+def : PatBrCC<SETUGE, CMPlt>;
+def : PatBrCC<SETULT, CMPge>;
+def : PatBrCC<SETULE, CMPgt>;
+def : PatBrCC<SETUNE, CMPeq>;
 
 let isCall = 1 in
 def CALL : LargeConstInst<0x03, (outs), (ins callTarget:$imm), "CALL $imm",

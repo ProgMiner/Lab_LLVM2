@@ -94,6 +94,8 @@ private:
         return false;
     }
 
+    SDValue lowerSELECT(SDValue Op, SelectionDAG & DAG) const;
+
 /*
     void ReplaceNodeResults(
         SDNode * N,

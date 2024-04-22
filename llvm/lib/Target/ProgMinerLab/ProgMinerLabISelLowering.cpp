@@ -49,7 +49,7 @@ ProgMinerLabTargetLowering::ProgMinerLabTargetLowering(
 
     setOperationAction(ISD::BR_CC, MVT::i32, Legal);
     setOperationAction(ISD::SETCC, MVT::i32, Legal);
-    setOperationAction(ISD::SELECT, MVT::i32, Legal);
+    setOperationAction(ISD::SELECT, MVT::i32, Custom);
     setOperationAction(ISD::BRCOND, MVT::i32, Legal);
 
     setOperationAction(ISD::FRAMEADDR, MVT::i32, Legal);
@@ -674,6 +674,9 @@ bool ProgMinerLabTargetLowering::isLegalAddressingMode(
 
 SDValue ProgMinerLabTargetLowering::LowerOperation(SDValue Op, SelectionDAG & DAG) const {
     switch (Op->getOpcode()) {
+    case ISD::SELECT:
+        return lowerSELECT(Op, DAG);
+
     // case ISD::FRAMEADDR:
     //     return lowerFRAMEADDR(Op, DAG);
 
@@ -681,4 +684,21 @@ SDValue ProgMinerLabTargetLowering::LowerOperation(SDValue Op, SelectionDAG & DA
         Op.getNode()->dumpr();
         llvm_unreachable("unimplemented opcode");
     }
+}
+
+SDValue ProgMinerLabTargetLowering::lowerSELECT(SDValue Op, SelectionDAG & DAG) const {
+    SDValue Cond = Op.getOperand(0);
+    SDValue T = Op.getOperand(1);
+    SDValue F = Op.getOperand(2);
+
+    SDLoc DL(Op);
+    MVT VT = Op.getSimpleValueType();
+
+    SDValue One = DAG.getConstant(1, DL, VT);
+    SDValue Cond1 = DAG.getNode(ISD::AND, DL, VT, Cond, One);
+
+    // c' = c & 1
+    // (t * c') | (f * !c')
+    return DAG.getNode(ISD::OR, DL, VT, DAG.getNode(ISD::MUL, DL, VT, T, Cond1),
+        DAG.getNode(ISD::MUL, DL, VT, F, DAG.getNode(ISD::XOR, DL, VT, Cond1, One)));
 }
