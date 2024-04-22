@@ -24,7 +24,7 @@ FetchContent_MakeAvailable(ELFIO)
 # add_definitions(${LLVM_DEFINITIONS})
 
 add_compile_options(-Wall -Werror -pedantic-errors)
-add_compile_options(-fsanitize=address)
+add_compile_options(-O2 -fsanitize=address)
 add_link_options(-fsanitize=address)
 
 # pure implementation

@@ -13,7 +13,7 @@ static void sim_set_pixel(int x, int y, int v) {
 
 int main() {
     for (int i = 0; i < 100; ++i) {
-        const int s = sim_rand();
+        const int s = sim_rand() % (SIM_X_SIZE * SIM_Y_SIZE);
 
         for (int y = 0; y < SIM_Y_SIZE; ++y) {
             for (int x = 0; x < SIM_X_SIZE; ++x) {

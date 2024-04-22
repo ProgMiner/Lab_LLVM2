@@ -1,5 +1,4 @@
 #include <sstream>
-#include <iomanip>
 
 #include "loader.h"
 
@@ -12,7 +11,7 @@ struct disasm_info : code_info {
 
     void print_offset(std::ostream & os, std::size_t pos, const uint8_t * it) const;
 
-    void disasm(std::ostream &) const;
+    void disasm(std::ostream & os) const;
 };
 
 void disasm_info::add_labels() {
@@ -47,15 +46,6 @@ static void print_byte(std::ostream & os, uint8_t b) {
     os.fill(pf);
 }
 
-static void print_pos(std::ostream & os, std::size_t pos) {
-    const char pf = os.fill('0');
-
-    os << std::setw(4) << std::hex << std::uppercase << pos
-       << std::dec << std::nouppercase;
-
-    os.fill(pf);
-}
-
 void disasm_info::print_offset(std::ostream & os, std::size_t pos, const uint8_t * it) const {
     const auto off = read_number<int32_t>(it);
 
@@ -69,7 +59,7 @@ void disasm_info::print_offset(std::ostream & os, std::size_t pos, const uint8_t
     }
 }
 
-const char * reg_to_string(uint8_t reg) {
+static const char * reg_to_string(uint8_t reg) {
     static const char * const REGISTERS[] = {
         "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9",
         "R10", "R11", "R12", "TMP", "SP", "FP"
@@ -78,11 +68,11 @@ const char * reg_to_string(uint8_t reg) {
     return REGISTERS[reg & 0xF];
 }
 
-void print_reg(std::ostream & os, uint8_t reg) {
+static void print_reg(std::ostream & os, uint8_t reg) {
     os << reg_to_string(reg);
 }
 
-void print_reg2(std::ostream & os, const uint8_t * it) {
+static void print_reg2(std::ostream & os, const uint8_t * it) {
     const uint8_t regs = *it;
 
     print_reg(os, regs >> 4);
@@ -344,6 +334,11 @@ int main(int argc, char * argv[]) {
         return 2;
     }
 
-    info.add_labels();
-    info.disasm(std::cout);
+    try {
+        info.add_labels();
+        info.disasm(std::cout);
+    } catch (const std::exception & e) {
+        std::cerr << "Bad binary code: " << e.what() << std::endl;
+        return 3;
+    }
 }

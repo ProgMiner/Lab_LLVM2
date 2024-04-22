@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iomanip>
+
 #include <elfio/elfio.hpp>
 
 
@@ -238,7 +240,7 @@ public:
             const ELFIO::symbol_section_accessor symbols(reader, reader.sections[i]);
 
             std::string name;
-            ELFIO::Elf64_Addr value;
+            ELFIO::Elf64_Addr value = 0;
             ELFIO::Elf_Xword size;
             unsigned char bind;
             unsigned char type;
@@ -281,3 +283,12 @@ public:
         }
     };
 };
+
+static inline void print_pos(std::ostream & os, std::size_t pos) {
+    const char pf = os.fill('0');
+
+    os << std::setw(4) << std::hex << std::uppercase << pos
+       << std::dec << std::nouppercase;
+
+    os.fill(pf);
+}
