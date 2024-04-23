@@ -25,6 +25,8 @@ ProgMinerLabTargetLowering::ProgMinerLabTargetLowering(
 
     setSchedulingPreference(Sched::Source);
 
+    setBooleanContents(ZeroOrOneBooleanContent);
+
     for (unsigned Opc = 0; Opc < ISD::BUILTIN_OP_END; ++Opc) {
       setOperationAction(Opc, MVT::i32, Expand);
     }
