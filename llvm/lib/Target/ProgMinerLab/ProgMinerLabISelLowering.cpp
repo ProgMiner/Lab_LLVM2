@@ -691,14 +691,33 @@ SDValue ProgMinerLabTargetLowering::lowerSELECT(SDValue Op, SelectionDAG & DAG) 
     SDValue T = Op.getOperand(1);
     SDValue F = Op.getOperand(2);
 
+    MVT CondVT = Cond.getSimpleValueType();
+
     SDLoc DL(Op);
     MVT VT = Op.getSimpleValueType();
 
-    SDValue One = DAG.getConstant(1, DL, VT);
-    SDValue Cond1 = DAG.getNode(ISD::AND, DL, VT, Cond, One);
+    assert(CondVT.isScalarInteger());
+    if (CondVT.getSizeInBits() > 1) {
+        Cond = DAG.getNode(ISD::SETCC, DL, VT, Cond, DAG.getConstant(0, DL, CondVT),
+            DAG.getCondCode(ISD::SETNE));
+    }
 
-    // c' = c & 1
-    // (t * c') | (f * !c')
-    return DAG.getNode(ISD::OR, DL, VT, DAG.getNode(ISD::MUL, DL, VT, T, Cond1),
-        DAG.getNode(ISD::MUL, DL, VT, F, DAG.getNode(ISD::XOR, DL, VT, Cond1, One)));
+    // !c
+    SDValue NCond = DAG.getNode(ISD::XOR, DL, VT, Cond, DAG.getConstant(1, DL, VT));
+
+    assert(VT.isScalarInteger());
+    if (VT.getSizeInBits() == 1) {
+        // t & c | f & !c
+
+        return DAG.getNode(ISD::OR, DL, VT,
+            DAG.getNode(ISD::AND, DL, VT, T, Cond),
+            DAG.getNode(ISD::AND, DL, VT, F, NCond));
+    }
+
+    assert(VT.getSizeInBits() > 1);
+
+    // (t * c) | (f * !c)
+    return DAG.getNode(ISD::OR, DL, VT,
+        DAG.getNode(ISD::MUL, DL, VT, T, Cond),
+        DAG.getNode(ISD::MUL, DL, VT, F, NCond));
 }
