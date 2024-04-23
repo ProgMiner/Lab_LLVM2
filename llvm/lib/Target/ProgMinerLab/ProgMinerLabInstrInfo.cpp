@@ -37,6 +37,24 @@ void ProgMinerLabInstrInfo::copyPhysReg(
     llvm_unreachable("can't copyPhysReg");
 }
 
+bool ProgMinerLabInstrInfo::getConstValDefinedInReg(
+    const MachineInstr & MI,
+    const Register Reg,
+    int64_t & ImmVal
+) const {
+    switch (MI.getOpcode()) {
+    case ProgMinerLab::CONSTl:
+    case ProgMinerLab::CONSTs:
+        break;
+
+    default:
+        return false;
+    }
+
+    ImmVal = MI.getOperand(1).getImm();
+    return true;
+}
+
 void ProgMinerLabInstrInfo::storeRegToStackSlot(
     MachineBasicBlock & MBB,
     MachineBasicBlock::iterator I,
@@ -53,18 +71,18 @@ void ProgMinerLabInstrInfo::storeRegToStackSlot(
         DL = I->getDebugLoc();
     }
 
-    // MachineFunction * MF = MBB.getParent();
-    // MachineFrameInfo & MFI = MF->getFrameInfo();
+    MachineFunction & MF = *MBB.getParent();
+    MachineFrameInfo & MFI = MF.getFrameInfo();
 
-    // MachineMemOperand * MMO = MF->getMachineMemOperand(
-    //     MachinePointerInfo::getFixedStack(*MF, FI),
-    //     MachineMemOperand::MOStore,
-    //     MFI.getObjectSize(FI),
-    //     MFI.getObjectAlign(FI)
-    // );
+    MachineMemOperand * MMO = MF.getMachineMemOperand(
+        MachinePointerInfo::getFixedStack(MF, FI),
+        MachineMemOperand::MOStore,
+        MFI.getObjectSize(FI),
+        MFI.getObjectAlign(FI)
+    );
 
     BuildMI(MBB, I, DL, get(ProgMinerLab::STORE)).addFrameIndex(FI)
-        .addReg(SrcReg, getKillRegState(IsKill)) /* .addMemOperand(MMO) */;
+        .addReg(SrcReg, getKillRegState(IsKill)).addMemOperand(MMO);
 }
 
 void ProgMinerLabInstrInfo::loadRegFromStackSlot(
@@ -82,16 +100,16 @@ void ProgMinerLabInstrInfo::loadRegFromStackSlot(
         DL = I->getDebugLoc();
     }
 
-    // MachineFunction * MF = MBB.getParent();
-    // MachineFrameInfo & MFI = MF->getFrameInfo();
+    MachineFunction & MF = *MBB.getParent();
+    MachineFrameInfo & MFI = MF.getFrameInfo();
 
-    // MachineMemOperand * MMO = MF->getMachineMemOperand(
-    //     MachinePointerInfo::getFixedStack(*MF, FI),
-    //     MachineMemOperand::MOLoad,
-    //     MFI.getObjectSize(FI),
-    //     MFI.getObjectAlign(FI)
-    // );
+    MachineMemOperand * MMO = MF.getMachineMemOperand(
+        MachinePointerInfo::getFixedStack(MF, FI),
+        MachineMemOperand::MOLoad,
+        MFI.getObjectSize(FI),
+        MFI.getObjectAlign(FI)
+    );
 
     BuildMI(MBB, I, DL, get(ProgMinerLab::LOAD), DstReg)
-        .addFrameIndex(FI) /* .addMemOperand(MMO) */;
+        .addFrameIndex(FI).addMemOperand(MMO);
 }

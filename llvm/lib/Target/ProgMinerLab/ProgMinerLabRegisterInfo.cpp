@@ -78,8 +78,6 @@ bool ProgMinerLabRegisterInfo::eliminateFrameIndex(
     int32_t Offset = getFrameLowering(MF)
         ->getFrameIndexReference(MF, FrameIndex, FrameReg).getFixed();
 
-    // Offset += MI.getOperand(FIOperandNum + 1).getImm();
-
     if (isInt<8>(Offset)) {
         BuildMI(MBB, II, DL, TII.get(ProgMinerLab::CONSTs))
             .addReg(ProgMinerLab::TMP, RegState::Define).addImm(Offset);
@@ -92,7 +90,6 @@ bool ProgMinerLabRegisterInfo::eliminateFrameIndex(
         .addReg(ProgMinerLab::TMP, RegState::Kill).addReg(FrameReg);
 
     MI.getOperand(FIOperandNum).ChangeToRegister(ProgMinerLab::TMP, false, false, true);
-    // MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Offset);
     return false;
 }
 

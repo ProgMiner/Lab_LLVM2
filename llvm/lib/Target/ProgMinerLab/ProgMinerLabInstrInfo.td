@@ -144,11 +144,11 @@ def : PatBrCC<SETUNE, CMPeq>;
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0, isBarrier = 1 in {
 
-    let Defs = [R0], isCall = 1 in
+    let isCall = 1 in
     def CALL : LargeConstInst<0x03, (outs), (ins callTarget:$imm), "CALL $imm",
         [(progminerlab_call tglobaladdr:$imm)]>;
 
-    let Uses = [R0], isReturn = 1, isTerminator = 1 in
+    let isReturn = 1, isTerminator = 1 in
     def RET : SimpleInst<0x04, (outs), (ins), "RET", [(progminerlab_ret)]>;
 }
 

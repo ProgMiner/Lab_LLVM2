@@ -28,6 +28,12 @@ public:
         bool KillSrc
     ) const override;
 
+    bool getConstValDefinedInReg(
+        const MachineInstr & MI,
+        const Register Reg,
+        int64_t & ImmVal
+    ) const override;
+
     void storeRegToStackSlot(
         MachineBasicBlock & MBB,
         MachineBasicBlock::iterator MI,
