@@ -166,6 +166,10 @@ def FLUSH : SimpleInst<0x02, (outs), (ins), "FLUSH", [(int_progminerlab_flush)]>
 def RAND : UnaryInst<0x6, (outs GPR:$reg), (ins), "RAND $reg",
     [(set GPR:$reg, (int_progminerlab_rand))]>;
 
+let hasSideEffects = 1, mayLoad = 0, mayStore = 0 in
+def DUMP : SmallConstRegInst<0x7, (outs), (ins imm8:$imm, GPR:$reg), "DUMP $imm, $reg",
+    [(int_progminerlab_dump imm8:$imm, GPR:$reg)]>;
+
 // Pseudo instructions
 
 def ADJCALLSTACKDOWN : ProgMinerLabPseudoInst<(outs), (ins i32imm:$amt, i32imm:$amt2),

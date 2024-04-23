@@ -356,6 +356,16 @@ static int run(const run_info & info) {
             ctx.regs[opcode & 0xF] = sim_rand();
             break;
 
+        case 0x7: {
+            const uint8_t reg = opcode & 0xF;
+            const int32_t label = info.read_number<int8_t>(tmp);
+
+            std::cout << "DUMP #" << label << ": R" << static_cast<uint32_t>(reg)
+                      << " = " << ctx.regs[reg] << std::endl;
+
+            break;
+        }
+
 unknown:
         default: {
             std::ostringstream os;

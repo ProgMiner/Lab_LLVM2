@@ -115,6 +115,22 @@ struct code_info {
         case 0x3D:
         case 0x3E:
         case 0x3F:
+        case 0x70:
+        case 0x71:
+        case 0x72:
+        case 0x73:
+        case 0x74:
+        case 0x75:
+        case 0x76:
+        case 0x77:
+        case 0x78:
+        case 0x79:
+        case 0x7A:
+        case 0x7B:
+        case 0x7C:
+        case 0x7D:
+        case 0x7E:
+        case 0x7F:
             read_number<uint8_t>(it);
             break;
 

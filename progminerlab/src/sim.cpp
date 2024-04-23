@@ -20,3 +20,7 @@ int32_t sim_rand() {
 
     return distrib(gen);
 }
+
+void dump(int32_t label, int32_t value) {
+    std::cout << "DUMP #" << label << ": " << value << std::endl;
+}

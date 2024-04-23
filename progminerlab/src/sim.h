@@ -35,6 +35,8 @@ extern void sim_set_pixel(int32_t x, int32_t y, int32_t value);
 extern void sim_flush(void);
 extern int32_t sim_rand(void);
 
+extern void dump(int32_t label, int32_t value);
+
 #ifdef __cplusplus
 }
 #endif

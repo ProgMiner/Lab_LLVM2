@@ -288,6 +288,11 @@ void disasm_info::disasm(std::ostream & os) const {
             print_reg(os, opcode);
             break;
 
+        case 0x7:
+            os << "DUMP " << static_cast<int32_t>(read_number<int8_t>(tmp)) << ", ";
+            print_reg(os, opcode);
+            break;
+
 unknown:
         default:
             os << "# UNKNOWN";

@@ -5,4 +5,6 @@ BUILTIN(sim_flush, "v", "nc")
 
 BUILTIN(sim_rand, "i", "nc")
 
+BUILTIN(dump, "vIii", "nc")
+
 #undef BUILTIN
