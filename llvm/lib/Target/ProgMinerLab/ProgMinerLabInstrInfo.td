@@ -39,33 +39,38 @@ let isMoveImm = 1 in {
 
 // Arithmetic operations
 
+let isMoveReg = 1 in
 def MOV : BinaryInst<0x10, (outs GPR:$reg1), (ins GPR:$reg2), "MOV $reg1, $reg2", []>;
 
-let Constraints = "$res = $reg1" in {
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, Constraints = "$res = $reg1" in
+class Arith<bits<8> op> : BinaryInst<op, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2),
+    NAME#" $reg1, $reg2", []>;
 
-    class Arith<bits<8> op>
-        : BinaryInst<op, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), NAME#" $reg1, $reg2", []>;
+let isAdd = 1 in
+def ADD : Arith<0x11>;
+def SUB : Arith<0x12>;
+def MUL : Arith<0x13>;
+def DIV : Arith<0x14>;
+def REM : Arith<0x15>;
+def AND : Arith<0x16>;
+def OR  : Arith<0x17>;
+def XOR : Arith<0x18>;
+def SHL : Arith<0x19>;
+def SHR : Arith<0x1A>;
+def ASR : Arith<0x1B>;
 
-    def ADD : Arith<0x11>;
-    def SUB : Arith<0x12>;
-    def MUL : Arith<0x13>;
-    def DIV : Arith<0x14>;
-    def REM : Arith<0x15>;
-    def AND : Arith<0x16>;
-    def OR  : Arith<0x17>;
-    def XOR : Arith<0x18>;
-    def SHL : Arith<0x19>;
-    def SHR : Arith<0x1A>;
-    def ASR : Arith<0x1B>;
+class Compare<bits<8> op> : Arith<op> {
 
-    // second digit corresponds to CondCode numeration
-    def CMPeq : BinaryInst<0x21, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "CMPeq $reg1, $reg2", []>;
-    def CMPgt : BinaryInst<0x22, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "CMPgt $reg1, $reg2", []>;
-    def CMPge : BinaryInst<0x23, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "CMPge $reg1, $reg2", []>;
-    def CMPlt : BinaryInst<0x24, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "CMPlt $reg1, $reg2", []>;
-    def CMPle : BinaryInst<0x25, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "CMPle $reg1, $reg2", []>;
-    def CMPne : BinaryInst<0x26, (outs GPR:$res), (ins GPR:$reg1, GPR:$reg2), "CMPne $reg1, $reg2", []>;
+    let isCompare = 1;
 }
+
+// second digit corresponds to CondCode numeration
+def CMPeq : Compare<0x21>;
+def CMPgt : Compare<0x22>;
+def CMPge : Compare<0x23>;
+def CMPlt : Compare<0x24>;
+def CMPle : Compare<0x25>;
+def CMPne : Compare<0x26>;
 
 def : Pat<(add GPR:$reg1, GPR:$reg2), (ADD GPR:$reg1, GPR:$reg2)>;
 def : Pat<(sub GPR:$reg1, GPR:$reg2), (SUB GPR:$reg1, GPR:$reg2)>;
@@ -78,36 +83,6 @@ def : Pat<(xor GPR:$reg1, GPR:$reg2), (XOR GPR:$reg1, GPR:$reg2)>;
 def : Pat<(shl GPR:$reg1, GPR:$reg2), (SHL GPR:$reg1, GPR:$reg2)>;
 def : Pat<(srl GPR:$reg1, GPR:$reg2), (SHR GPR:$reg1, GPR:$reg2)>;
 def : Pat<(sra GPR:$reg1, GPR:$reg2), (ASR GPR:$reg1, GPR:$reg2)>;
-
-// Memory operations
-
-let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
-def LOAD : BinaryInst<0x1C, (outs GPR:$reg1), (ins GPR:$reg2), "LOAD $reg1, $reg2", []>;
-def : Pat<(i32 (load memAddr:$reg2)), (LOAD memAddr:$reg2)>;
-// def : Pat<(i32 (load (add BaseAddr:$r2, simm16:$r3_imm))),
-//           (LDI BaseAddr:$r2, simm16:$r3_imm)>;
-// def : Pat<(i32 (load (IsOrAdd AddrFI:$r2, simm16:$r3_imm))),
-//           (LDI AddrFI:$r2, simm16:$r3_imm)>;
-
-let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
-def STORE : BinaryInst<0x1D, (outs), (ins GPR:$reg1, GPR:$reg2), "STORE $reg1, $reg2", []>;
-def : Pat<(store (i32 GPR:$reg1), memAddr:$reg2), (STORE memAddr:$reg2, GPR:$reg1)>;
-// def : Pat<(store (i32 GPR:$reg1), (add BaseAddr:$reg2, simm16:$r3_imm)),
-//         (STI_ GPR:$r1, BaseAddr:$r2, simm16:$r3_imm)>;
-// def : Pat<(store (i32 GPR:$r1), (IsOrAdd AddrFI:$r2, simm16:$r3_imm)),
-//         (STI_ GPR:$r1, AddrFI:$r2, simm16:$r3_imm)>;
-
-// Control flow
-
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0, isBranch = 1, isTerminator = 1 in {
-
-    let isBarrier = 1 in
-    def JMP : LargeConstInst<0x01, (outs), (ins jumpTarget:$imm), "JMP $imm", [(br bb:$imm)]>;
-
-    def IFZ : LargeConstRegInst<0x5, (outs), (ins GPR:$reg, jumpTarget:$imm), "IFZ $reg, $imm", []>;
-}
-
-def : Pat<(brcond GPR:$reg, bb:$imm), (IFZ (CMPeq GPR:$reg, 0), jumpTarget:$imm)>;
 
 class PatCC<CondCode CC, ProgMinerLabInst CMP> : Pat<(setcc GPR:$reg1, GPR:$reg2, CC),
     (CMP GPR:$reg1, GPR:$reg2)>;
@@ -125,6 +100,29 @@ def : PatCC<SETUGE, CMPge>;
 def : PatCC<SETULT, CMPlt>;
 def : PatCC<SETULE, CMPle>;
 def : PatCC<SETUNE, CMPne>;
+
+// Memory operations
+
+let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in
+def LOAD : BinaryInst<0x1C, (outs GPR:$reg1), (ins GPR:$reg2), "LOAD $reg1, $reg2", []>;
+def : Pat<(i32 (load memAddr:$reg2)), (LOAD memAddr:$reg2)>;
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in
+def STORE : BinaryInst<0x1D, (outs), (ins GPR:$reg1, GPR:$reg2), "STORE $reg1, $reg2", []>;
+def : Pat<(store (i32 GPR:$reg1), memAddr:$reg2), (STORE memAddr:$reg2, GPR:$reg1)>;
+
+// Control flow
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0,
+    isBranch = 1, isBarrier = 1, isTerminator = 1
+in {
+
+    def JMP : LargeConstInst<0x01, (outs), (ins jumpTarget:$imm), "JMP $imm", [(br bb:$imm)]>;
+
+    def IFZ : LargeConstRegInst<0x5, (outs), (ins GPR:$reg, jumpTarget:$imm), "IFZ $reg, $imm", []>;
+}
+
+def : Pat<(brcond GPR:$reg, bb:$imm), (IFZ (CMPeq GPR:$reg, 0), jumpTarget:$imm)>;
 
 class PatBrCC<CondCode CC, ProgMinerLabInst CMP> : Pat<(brcc CC, GPR:$reg1, GPR:$reg2, bb:$imm),
     (IFZ (CMP GPR:$reg1, GPR:$reg2), jumpTarget:$imm)>;
@@ -144,25 +142,36 @@ def : PatBrCC<SETULT, CMPge>;
 def : PatBrCC<SETULE, CMPgt>;
 def : PatBrCC<SETUNE, CMPeq>;
 
-let isCall = 1 in
-def CALL : LargeConstInst<0x03, (outs), (ins callTarget:$imm), "CALL $imm",
-    [(progminerlab_call tglobaladdr:$imm)]>;
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, isBarrier = 1 in {
 
-let isBarrier = 1, isReturn = 1, isTerminator = 1 in
-def RET : SimpleInst<0x04, (outs), (ins), "RET", [(progminerlab_ret)]>;
+    let Defs = [R0], isCall = 1 in
+    def CALL : LargeConstInst<0x03, (outs), (ins callTarget:$imm), "CALL $imm",
+        [(progminerlab_call tglobaladdr:$imm)]>;
+
+    let Uses = [R0], isReturn = 1, isTerminator = 1 in
+    def RET : SimpleInst<0x04, (outs), (ins), "RET", [(progminerlab_ret)]>;
+}
 
 // Misc
 
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 def NOP : SimpleInst<0x00, (outs), (ins), "NOP", []>;
 
-def PIXEL_OFF : BinaryInst<0x1E, (outs), (ins GPR:$reg1, GPR:$reg2), "PIXEL_OFF $reg1, $reg2",
-    [(int_progminerlab_pixeloff GPR:$reg1, GPR:$reg2)]>;
+let hasSideEffects = 1, mayLoad = 0, mayStore = 0 in {
 
-def PIXEL_ON : BinaryInst<0x1F, (outs), (ins GPR:$reg1, GPR:$reg2), "PIXEL_ON $reg1, $reg2",
-    [(int_progminerlab_pixelon GPR:$reg1, GPR:$reg2)]>;
+    let isAsCheapAsAMove = 1 in
+    def PIXEL_OFF : BinaryInst<0x1E, (outs), (ins GPR:$reg1, GPR:$reg2), "PIXEL_OFF $reg1, $reg2",
+        [(int_progminerlab_pixeloff GPR:$reg1, GPR:$reg2)]>;
 
-def FLUSH : SimpleInst<0x02, (outs), (ins), "FLUSH", [(int_progminerlab_flush)]>;
+    let isAsCheapAsAMove = 1 in
+    def PIXEL_ON : BinaryInst<0x1F, (outs), (ins GPR:$reg1, GPR:$reg2), "PIXEL_ON $reg1, $reg2",
+        [(int_progminerlab_pixelon GPR:$reg1, GPR:$reg2)]>;
 
+    let hasDelaySlot = 1 in
+    def FLUSH : SimpleInst<0x02, (outs), (ins), "FLUSH", [(int_progminerlab_flush)]>;
+}
+
+let hasSideEffects = 1, mayLoad = 0, mayStore = 0, isAsCheapAsAMove = 1 in
 def RAND : UnaryInst<0x6, (outs GPR:$reg), (ins), "RAND $reg",
     [(set GPR:$reg, (int_progminerlab_rand))]>;
 
@@ -172,8 +181,11 @@ def DUMP : SmallConstRegInst<0x7, (outs), (ins imm8:$imm, GPR:$reg), "DUMP $imm,
 
 // Pseudo instructions
 
-def ADJCALLSTACKDOWN : ProgMinerLabPseudoInst<(outs), (ins i32imm:$amt, i32imm:$amt2),
-    "# ADJCALLSTACKDOWN $amt, $amt2", [(callseq_start timm:$amt, timm:$amt2)]>;
+let Uses = [SP], Defs = [SP] in {
 
-def ADJCALLSTACKUP : ProgMinerLabPseudoInst<(outs), (ins i32imm:$amt1, i32imm:$amt2),
-    "# ADJCALLSTACKUP $amt1", [(callseq_end timm:$amt1, timm:$amt2)]>;
+    def ADJCALLSTACKDOWN : ProgMinerLabPseudoInst<(outs), (ins i32imm:$amt, i32imm:$amt2),
+        "# ADJCALLSTACKDOWN $amt, $amt2", [(callseq_start timm:$amt, timm:$amt2)]>;
+
+    def ADJCALLSTACKUP : ProgMinerLabPseudoInst<(outs), (ins i32imm:$amt1, i32imm:$amt2),
+        "# ADJCALLSTACKUP $amt1", [(callseq_end timm:$amt1, timm:$amt2)]>;
+}
