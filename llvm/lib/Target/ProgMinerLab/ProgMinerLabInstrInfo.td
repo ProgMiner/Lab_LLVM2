@@ -122,8 +122,6 @@ in {
     def IFZ : LargeConstRegInst<0x5, (outs), (ins GPR:$reg, jumpTarget:$imm), "IFZ $reg, $imm", []>;
 }
 
-def : Pat<(brcond GPR:$reg, bb:$imm), (IFZ (CMPeq GPR:$reg, 0), jumpTarget:$imm)>;
-
 class PatBrCC<CondCode CC, ProgMinerLabInst CMP> : Pat<(brcc CC, GPR:$reg1, GPR:$reg2, bb:$imm),
     (IFZ (CMP GPR:$reg1, GPR:$reg2), jumpTarget:$imm)>;
 

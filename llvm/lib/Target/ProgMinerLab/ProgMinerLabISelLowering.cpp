@@ -50,9 +50,9 @@ ProgMinerLabTargetLowering::ProgMinerLabTargetLowering(
     setOperationAction(ISD::UNDEF, MVT::i32, Legal);
 
     setOperationAction(ISD::BR_CC, MVT::i32, Legal);
+    setOperationAction(ISD::BRCOND, MVT::Other, Custom);
     setOperationAction(ISD::SETCC, MVT::i32, Legal);
     setOperationAction(ISD::SELECT, MVT::i32, Custom);
-    setOperationAction(ISD::BRCOND, MVT::i32, Legal);
 
     setOperationAction(ISD::FRAMEADDR, MVT::i32, Legal);
     // setOperationAction(ISD::FrameIndex, MVT::i32, Custom);
@@ -676,6 +676,9 @@ bool ProgMinerLabTargetLowering::isLegalAddressingMode(
 
 SDValue ProgMinerLabTargetLowering::LowerOperation(SDValue Op, SelectionDAG & DAG) const {
     switch (Op->getOpcode()) {
+    case ISD::BRCOND:
+        return lowerBRCOND(Op, DAG);
+
     case ISD::SELECT:
         return lowerSELECT(Op, DAG);
 
@@ -688,17 +691,33 @@ SDValue ProgMinerLabTargetLowering::LowerOperation(SDValue Op, SelectionDAG & DA
     }
 }
 
+SDValue ProgMinerLabTargetLowering::lowerBRCOND(SDValue Op, SelectionDAG & DAG) const {
+    SDValue Chain = Op.getOperand(0);
+    SDValue Cond = Op.getOperand(1);
+    SDValue Block = Op.getOperand(2);
+
+    SDLoc DL(Op);
+    MVT VT = Op.getSimpleValueType();
+
+    MVT CondVT = Cond.getSimpleValueType();
+
+    // brcond ch, cond, block = br_cc ch, SETNE, cond, 0, block
+    return DAG.getNode(ISD::BR_CC, DL, VT, Chain, DAG.getCondCode(ISD::SETNE), Cond,
+        DAG.getConstant(0, DL, CondVT), Block);
+}
+
 SDValue ProgMinerLabTargetLowering::lowerSELECT(SDValue Op, SelectionDAG & DAG) const {
     SDValue Cond = Op.getOperand(0);
     SDValue T = Op.getOperand(1);
     SDValue F = Op.getOperand(2);
 
-    MVT CondVT = Cond.getSimpleValueType();
-
     SDLoc DL(Op);
     MVT VT = Op.getSimpleValueType();
+    assert(VT.isScalarInteger());
 
+    MVT CondVT = Cond.getSimpleValueType();
     assert(CondVT.isScalarInteger());
+
     if (CondVT.getSizeInBits() > 1) {
         Cond = DAG.getNode(ISD::SETCC, DL, VT, Cond, DAG.getConstant(0, DL, CondVT),
             DAG.getCondCode(ISD::SETNE));
@@ -706,17 +725,6 @@ SDValue ProgMinerLabTargetLowering::lowerSELECT(SDValue Op, SelectionDAG & DAG) 
 
     // !c
     SDValue NCond = DAG.getNode(ISD::XOR, DL, VT, Cond, DAG.getConstant(1, DL, VT));
-
-    assert(VT.isScalarInteger());
-    if (VT.getSizeInBits() == 1) {
-        // t & c | f & !c
-
-        return DAG.getNode(ISD::OR, DL, VT,
-            DAG.getNode(ISD::AND, DL, VT, T, Cond),
-            DAG.getNode(ISD::AND, DL, VT, F, NCond));
-    }
-
-    assert(VT.getSizeInBits() > 1);
 
     // (t * c) | (f * !c)
     return DAG.getNode(ISD::OR, DL, VT,

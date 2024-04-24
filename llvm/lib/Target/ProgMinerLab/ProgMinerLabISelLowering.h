@@ -16,8 +16,6 @@ enum NodeType : unsigned {
     // start the numbering where the builtin ops and target ops leave off
     FIRST_NUMBER = ISD::BUILTIN_OP_END,
 
-    BR_CC,
-
     CALL,
     RET,
 };
@@ -94,6 +92,7 @@ private:
         return false;
     }
 
+    SDValue lowerBRCOND(SDValue Op, SelectionDAG & DAG) const;
     SDValue lowerSELECT(SDValue Op, SelectionDAG & DAG) const;
 
 /*
