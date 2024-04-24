@@ -38,7 +38,6 @@ static void draw_gen(const int32_t * gen) {
 
 static int32_t calc_gen(int32_t * next_gen, const int32_t * prev_gen) {
     int32_t has_changes = 0;
-    int32_t has_living = 0;
 
 	for (int32_t y = 0; y < SIM_Y_SIZE; ++y) {
 	    for (int32_t x = 0; x < SIM_X_SIZE; ++x) {
@@ -63,15 +62,11 @@ static int32_t calc_gen(int32_t * next_gen, const int32_t * prev_gen) {
                 has_changes = 1;
             }
 
-            if (next_value) {
-                has_living = 1;
-            }
-
             set_gen_value(next_gen, x, y, next_value);
         }
     }
 
-    return has_changes || has_living;
+    return has_changes;
 }
 
 int main(void) {
